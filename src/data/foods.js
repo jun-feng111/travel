@@ -1,0 +1,31 @@
+// 美食数据
+export const foods = [
+  // ===== 成都 =====
+  { id: 'chengdu-hotpot', cityId: 'chengdu', name: '成都火锅', cover: 'img/chengdu-hotpot.png', desc: '以牛油锅底、麻辣鲜香著称，毛肚、鸭肠、黄喉是必点。', recommend: ['小龙坎', '蜀大侠', '大龙燚'] },
+  { id: 'chengdu-chuanchuan', cityId: 'chengdu', name: '串串香', cover: 'img/chengdu-chuanchuan.png', desc: '把火锅串成签，按签计费，市井烟火气十足。', recommend: ['钢管厂五区小郡肝', '玉林串串'] },
+  { id: 'chengdu-longchaoshou', cityId: 'chengdu', name: '龙抄手', cover: 'img/chengdu-longchaoshou.png', desc: '成都名小吃，皮薄馅嫩，红油抄手尤为经典。', recommend: ['龙抄手总店'] },
+
+  // ===== 杭州 =====
+  { id: 'hangzhou-xihucuyu', cityId: 'hangzhou', name: '西湖醋鱼', cover: 'img/hangzhou-xihucuyu.png', desc: '选草鱼活养，鱼肉嫩滑，糖醋汁酸甜适口。', recommend: ['楼外楼', '知味观'] },
+  { id: 'hangzhou-longjingxiaoren', cityId: 'hangzhou', name: '龙井虾仁', cover: 'img/hangzhou-longjingxiaoren.png', desc: '明前龙井茶叶与河虾仁同炒，清香鲜美。', recommend: ['楼外楼'] },
+  { id: 'hangzhou-dongpo', cityId: 'hangzhou', name: '东坡肉', cover: 'img/hangzhou-dongpo.png', desc: '肥而不腻、酥烂入味，相传为苏东坡所创。', recommend: ['楼外楼', '外婆家'] },
+
+  // ===== 西安 =====
+  { id: 'xian-roujiamo', cityId: 'xian', name: '肉夹馍', cover: 'img/xian-roujiamo.png', desc: '腊汁肉夹白吉馍，"中式汉堡"，外脆里嫩。', recommend: ['樊记腊汁肉', '子午路张记'] },
+  { id: 'xian-paomo', cityId: 'xian', name: '羊肉泡馍', cover: 'img/xian-paomo.png', desc: '掰碎馍块煮入羊肉汤，配糖蒜辣酱，暖胃饱腹。', recommend: ['老孙家', '同盛祥'] },
+  { id: 'xian-liangpi', cityId: 'xian', name: '凉皮', cover: 'img/xian-liangpi.png', desc: '筋道凉皮拌麻酱辣油，夏天开胃神器。', recommend: ['魏家凉皮'] },
+
+  // ===== 丽江 =====
+  { id: 'lijiang-guozhuang', cityId: 'lijiang', name: '纳西烤鱼', cover: 'img/lijiang-guozhuang.png', desc: '丽江粑粑配烤鱼，外焦里嫩，蘸水香辣。', recommend: ['古城农家菜'] },
+  { id: 'lijiang-baba', cityId: 'lijiang', name: '丽江粑粑', cover: 'img/lijiang-baba.png', desc: '纳西传统面食，甜咸两味，酥香耐存。', recommend: ['街边老店'] },
+  { id: 'lijiang-shanguo', cityId: 'lijiang', name: '腊排骨火锅', cover: 'img/lijiang-shanguo.png', desc: '高原土猪腊排骨熬汤，咸香浓郁，配野菜。', recommend: ['新城腊排骨一条街'] },
+
+  // ===== 厦门 =====
+  { id: 'xiamen-shachamian', cityId: 'xiamen', name: '沙茶面', cover: 'img/xiamen-shachamian.png', desc: '沙茶酱熬汤，鲜辣浓香，配料自选。', recommend: ['乌糖沙茶面', '四里沙茶面'] },
+  { id: 'xiamen-haishen', cityId: 'xiamen', name: '海蛎煎', cover: 'img/xiamen-haishen.png', desc: '鲜海蛎裹地瓜粉煎制，外软内鲜，配甜辣酱。', recommend: ['中山路夜市'] },
+  { id: 'xiamen-zongzi', cityId: 'xiamen', name: '烧肉粽', cover: 'img/xiamen-zongzi.png', desc: '糯米包五花肉、蛋黄、香菇，蘸花生酱甜辣酱。', recommend: ['1980烧肉粽'] }
+]
+
+export function foodsByCity(cityId) {
+  return foods.filter(f => f.cityId === cityId)
+}
