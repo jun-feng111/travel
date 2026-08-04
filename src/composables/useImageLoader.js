@@ -1,6 +1,6 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { getStaticMapUrl } from '../api/amap'
 
-const AMAP_KEY = '91aa55be616abb60c334f6b734eb1279'
 const IMAGE_CACHE = new Map()
 
 /**
@@ -60,7 +60,7 @@ function observeIntersection(el, callback) {
  * }}
  */
 export function getCityCover(lng, lat, keywords = '', fallbackUrl = '') {
-  const amapUrl = `https://webst.amap.com/maps/staticmap?location=${lng},${lat}&zoom=11&width=800&height=500&key=${AMAP_KEY}`
+  const amapUrl = getStaticMapUrl(lng, lat, 800, 500, 11)
 
   const keyword = encodeURIComponent(keywords || 'city travel landscape')
   const unsplashUrl = `https://source.unsplash.com/800x500/?${keyword}`
