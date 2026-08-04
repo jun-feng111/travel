@@ -1,5 +1,47 @@
 <template>
   <div>
+    <!-- Hero Section with Search -->
+    <div class="hero-section">
+      <div class="hero-bg">
+        <div class="hero-grad"></div>
+      </div>
+      <div class="hero-content">
+        <h1 class="hero-title">发现世界的美好</h1>
+        <p class="hero-sub">搜索全国 {{ cityCount }}+ 个城市的景点、美食，规划你的梦想之旅</p>
+        <div class="hero-search">
+          <el-input
+            v-model="searchKw"
+            size="large"
+            placeholder="试试搜索：北京、成都火锅、西湖、故宫..."
+            clearable
+            @keyup.enter="goExplore"
+          >
+            <template #prefix><el-icon><Search /></el-icon></template>
+            <template #append>
+              <el-button @click="goExplore">
+                <el-icon><Search /></el-icon>
+              </el-button>
+            </template>
+          </el-input>
+          <div class="hero-hot">
+            <span>热门：</span>
+            <el-tag
+              v-for="tag in hotTags"
+              :key="tag"
+              class="hot-tag"
+              effect="plain"
+              round
+              @click="searchKw = tag; goExplore()"
+            >{{ tag }}</el-tag>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <router-link to="/explore" class="hero-btn primary">🔍 开始探索</router-link>
+          <router-link to="/planner" class="hero-btn">📋 行程规划</router-link>
+        </div>
+      </div>
+    </div>
+
     <!-- 首屏轮播 -->
     <el-carousel height="460px" indicator-position="outside" :interval="5000" arrow="hover">
       <el-carousel-item v-for="b in banners" :key="b.cityId">
@@ -71,11 +113,24 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { Search } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
 import { cities, getCity } from '../data/cities'
 import { guides } from '../data/guides'
 import { spots } from '../data/spots'
+
+const router = useRouter()
+const searchKw = ref('')
+
+const hotTags = ['北京', '成都', '火锅', '西湖', '故宫', '三亚', '丽江']
+const cityCount = computed(() => cities.length)
+
+function goExplore() {
+  const q = searchKw.value.trim()
+  router.push({ name: 'explore', query: { kw: q } })
+}
 
 const banners = [
   { cityId: 'chengdu', cityName: '成都', region: '西南 · 四川', title: '去看大熊猫打滚', sub: '火锅、茶馆与慢生活的天堂', cover: 'img/chengdu-cover.png' },
@@ -95,6 +150,142 @@ function cityName(id) {
 </script>
 
 <style scoped>
+.hero-section {
+  position: relative;
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+.hero-grad {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 40%),
+    radial-gradient(circle at 60% 80%, rgba(255,255,255,0.15) 0%, transparent 50%);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: white;
+  padding: 60px 20px;
+  max-width: 800px;
+}
+
+.hero-title {
+  font-size: 56px;
+  font-weight: 800;
+  margin: 0 0 16px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+  letter-spacing: 2px;
+}
+
+.hero-sub {
+  font-size: 20px;
+  margin: 0 0 32px;
+  opacity: 0.95;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.2);
+}
+
+.hero-search {
+  max-width: 600px;
+  margin: 0 auto 16px;
+}
+
+.hero-search :deep(.el-input__wrapper) {
+  background: rgba(255,255,255,0.95);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.hero-search :deep(.el-input-group__append) {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  color: white;
+}
+
+.hero-search :deep(.el-input-group__append .el-button) {
+  color: white;
+}
+
+.hero-hot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  color: rgba(255,255,255,0.9);
+}
+
+.hot-tag {
+  cursor: pointer;
+  background: rgba(255,255,255,0.2) !important;
+  border-color: rgba(255,255,255,0.4) !important;
+  color: white !important;
+  transition: all 0.2s;
+}
+
+.hot-tag:hover {
+  background: rgba(255,255,255,0.3) !important;
+  transform: scale(1.05);
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.hero-btn {
+  display: inline-block;
+  padding: 14px 32px;
+  border-radius: 30px;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s;
+  text-decoration: none;
+  color: white;
+  background: rgba(255,255,255,0.2);
+  border: 2px solid rgba(255,255,255,0.5);
+  backdrop-filter: blur(4px);
+}
+
+.hero-btn:hover {
+  transform: translateY(-3px);
+  background: rgba(255,255,255,0.3);
+}
+
+.hero-btn.primary {
+  background: white;
+  color: #667eea;
+  border-color: white;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.hero-btn.primary:hover {
+  background: #f8f9fb;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 32px; }
+  .hero-sub { font-size: 16px; }
+  .hero-actions { flex-direction: column; align-items: center; }
+}
+
 .banner { position: relative; height: 100%; overflow: hidden; }
 .banner-bg { position: absolute; inset: 0; }
 .banner-bg :deep(.imgbox-img) { filter: brightness(0.5); transform: scale(1.05); }

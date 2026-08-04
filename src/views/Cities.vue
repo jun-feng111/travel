@@ -14,8 +14,8 @@
 
     <div class="grid grid-cols-4">
       <router-link v-for="c in filtered" :key="c.id" :to="`/city/${c.id}`" class="card city-card">
-        <div class="city-img-wrap">
-          <ImgBox :src="c.cover" :alt="c.name" height="180px" />
+        <div class="city-cover" :style="{ background: getGradient(c.name) }">
+          <span class="city-emoji">{{ getEmoji(c.name) }}</span>
           <span class="region-badge">{{ c.region }}</span>
         </div>
         <div class="city-body">
@@ -36,11 +36,38 @@
 <script setup>
 import { ref, computed } from 'vue'
 import ImgBox from '../components/ImgBox.vue'
-import { cities } from '../data/cities'
+import { cities, regions as cityRegions } from '../data/cities'
 
-const regions = ['华东', '西南', '西北', '东南']
+const regions = ['华北', '华东', '华南', '西北', '西南', '东南', '东北', '华中']
 const region = ref('全部')
 const kw = ref('')
+
+const gradients = [
+  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+  'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+  'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)'
+]
+
+function getGradient(name) {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return gradients[Math.abs(hash) % gradients.length]
+}
+
+function getEmoji(name) {
+  const map = {
+    '北京': '🏯', '上海': '🌃', '广州': '🌴', '深圳': '🏙️', '成都': '🐼',
+    '杭州': '🏞️', '西安': '🏛️', '重庆': '🌉', '苏州': '🏮', '南京': '⛩️',
+    '厦门': '🏖️', '三亚': '🌊', '丽江': '🏔️', '大理': '⛰️', '昆明': '🌸',
+    '青岛': '⚓', '哈尔滨': '❄️', '张家界': '🗻', '桂林': '⛰️', '九寨沟': '🌲'
+  }
+  return map[name] || '📍'
+}
 
 const filtered = computed(() => {
   const q = kw.value.trim().toLowerCase()
@@ -56,7 +83,17 @@ const filtered = computed(() => {
 .filter-bar { display: flex; gap: 16px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
 .search { width: 260px; }
 
-.city-img-wrap { position: relative; }
+.city-cover {
+  position: relative;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.city-emoji {
+  font-size: 64px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
 .region-badge {
   position: absolute; top: 12px; left: 12px;
   background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);

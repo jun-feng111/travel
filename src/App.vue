@@ -8,9 +8,11 @@
         </router-link>
         <div class="nav-links" :class="{ open: menuOpen }">
           <router-link to="/" @click="menuOpen = false">首页</router-link>
+          <router-link to="/explore" @click="menuOpen = false" class="explore-link">
+            🔍 探索
+          </router-link>
           <router-link to="/cities" @click="menuOpen = false">城市</router-link>
           <router-link to="/planner" @click="menuOpen = false">行程规划</router-link>
-          <router-link to="/tools" @click="menuOpen = false">工具箱</router-link>
           <router-link to="/favorites" @click="menuOpen = false" class="fav-link">
             收藏<span v-if="favCount" class="fav-badge">{{ favCount }}</span>
           </router-link>
@@ -46,18 +48,23 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { favState } from './data/favStore'
+import { useFavorites } from './composables/useFavorites'
 
 const router = useRouter()
 const kw = ref('')
 const menuOpen = ref(false)
-const favCount = computed(() => favState.list.length)
+const { state } = useFavorites()
+
+const favCount = computed(() => {
+  const s = state.value
+  return (s.cities?.length || 0) + (s.spots?.length || 0) + (s.foods?.length || 0)
+})
 
 function doSearch() {
   const q = kw.value.trim()
   if (!q) return
   menuOpen.value = false
-  router.push({ name: 'search', query: { q } })
+  router.push({ name: 'explore', query: { kw: q } })
 }
 </script>
 
@@ -83,6 +90,12 @@ function doSearch() {
 .nav-links { display: flex; align-items: center; gap: 24px; }
 .nav-links a { color: var(--text); font-weight: 500; transition: color 0.2s; }
 .nav-links a:hover, .nav-links a.router-link-active { color: var(--primary); }
+.explore-link {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 600 !important;
+}
 .fav-link { position: relative; }
 .fav-badge {
   display: inline-block; min-width: 16px; height: 16px; line-height: 16px;
@@ -119,7 +132,7 @@ function doSearch() {
     transition: max-height 0.3s ease;
     box-shadow: 0 8px 16px rgba(0,0,0,0.08);
   }
-  .nav-links.open { max-height: 320px; }
+  .nav-links.open { max-height: 400px; }
   .nav-links a { width: 100%; padding: 14px 20px; border-bottom: 1px solid #eee; }
   .nav-search { width: 100%; padding: 12px 20px; }
 }

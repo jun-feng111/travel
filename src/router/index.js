@@ -11,6 +11,8 @@ const routes = [
   { path: '/favorites', name: 'favorites', component: () => import('../views/Favorites.vue') },
   { path: '/tools', name: 'tools', component: () => import('../views/Tools.vue') },
   { path: '/search', name: 'search', component: () => import('../views/Search.vue') },
+  { path: '/explore', name: 'explore', component: () => import('../views/Explore.vue') },
+  { path: '/plan-detail/:planId', name: 'planDetail', component: () => import('../views/PlanDetail.vue') },
   { path: '/about', name: 'about', component: () => import('../views/About.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]

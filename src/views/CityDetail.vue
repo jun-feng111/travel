@@ -117,6 +117,25 @@
               <div class="season-label">气候特征</div>
               <div class="season-val-sm">{{ city.weather }}</div>
             </div>
+            <div class="card season-now" v-if="weather.now">
+              <div class="season-icon" style="color:#667eea">{{ getWeatherEmoji(weather.now.text) }}</div>
+              <div class="season-label">当前天气</div>
+              <div class="season-val-sm">{{ weather.now.text }} {{ weather.now.temp }}°C</div>
+              <div class="season-val-sm" style="font-size:12px;margin-top:4px">
+                💨 {{ weather.now.windDir }} {{ weather.now.windScale }}级 · 💧 {{ weather.now.humidity }}%
+              </div>
+            </div>
+            <div class="card season-7d" v-if="weather.daily.length">
+              <div class="season-icon" style="color:#43e97b">📅</div>
+              <div class="season-label">未来7天</div>
+              <div class="daily-row">
+                <div v-for="(d, i) in weather.daily.slice(0,7)" :key="i" class="daily-item">
+                  <div class="daily-date">{{ d.date.slice(5) }}</div>
+                  <div class="daily-icon">{{ getWeatherEmoji(d.textDay) }}</div>
+                  <div class="daily-temp">{{ d.tempMin }}~{{ d.tempMax }}°</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <h3 class="sub-title">月度旅行指数</h3>
@@ -152,31 +171,75 @@ import { spotsByCity } from '../data/spots'
 import { guidesByCity } from '../data/guides'
 import { galleriesByCity } from '../data/galleries'
 import { foodsByCity } from '../data/foods'
-import { isFav, toggleFav } from '../data/favorites'
-import { favState } from '../data/favStore'
+import { useFavorites } from '../composables/useFavorites'
+import { useWeather } from '../composables/useWeather'
 
 const route = useRoute()
 const cityId = route.params.cityId
 const city = getCity(cityId)
 const tab = ref('spots')
+const { isFavorite, toggleFavorite } = useFavorites()
+const { now, daily, fetchWeather } = useWeather()
 
-const spots = computed(() => spotsByCity(cityId).map(s => ({ ...s, faved: isFav('spot', s.id) })))
+const weather = computed(() => ({ now: now.value, daily: daily.value }))
+
+onMounted(() => {
+  if (city) {
+    fetchWeather(city.name)
+  }
+})
+
+const spots = computed(() => spotsByCity(cityId).map(s => ({ ...s, faved: isFavorite('spots', s.id) })))
 const guides = computed(() => guidesByCity(cityId))
 const galleries = computed(() => galleriesByCity(cityId))
-const foods = computed(() => foodsByCity(cityId).map(f => ({ ...f, faved: isFav('food', f.id) })))
+const foods = computed(() => foodsByCity(cityId).map(f => ({ ...f, faved: isFavorite('foods', f.id) })))
 
-const cityFaved = ref(isFav('city', cityId))
+const cityFaved = ref(isFavorite('cities', cityId))
 function toggleCityFav() {
-  cityFaved.value = toggleFav({ type: 'city', id: cityId, name: city.name, sub: '' })
-  favState.list = [...favState.list]
+  toggleFavorite('cities', cityId, {
+    id: cityId,
+    name: city.name,
+    province: city.province,
+    region: city.region,
+    slogan: city.slogan,
+    intro: city.intro
+  })
+  cityFaved.value = isFavorite('cities', cityId)
 }
 function toggleSpotFav(s) {
-  s.faved = toggleFav({ type: 'spot', id: s.id, name: s.name, sub: cityId })
-  favState.list = [...favState.list]
+  toggleFavorite('spots', s.id, {
+    id: s.id,
+    name: s.name,
+    cover: s.cover,
+    rating: s.rating,
+    tags: s.tags,
+    cityId: cityId,
+    cityName: city?.name,
+    intro: s.intro
+  })
+  s.faved = isFavorite('spots', s.id)
 }
 function toggleFoodFav(f) {
-  f.faved = toggleFav({ type: 'food', id: f.id, name: f.name, sub: cityId })
-  favState.list = [...favState.list]
+  toggleFavorite('foods', f.id, {
+    id: f.id,
+    name: f.name,
+    cover: f.cover,
+    desc: f.desc,
+    recommend: f.recommend,
+    cityId: cityId,
+    cityName: city?.name
+  })
+  f.faved = isFavorite('foods', f.id)
+}
+
+function getWeatherEmoji(text) {
+  if (!text) return '☀️'
+  if (/晴/.test(text)) return '☀️'
+  if (/多云|阴/.test(text)) return '⛅'
+  if (/雨/.test(text)) return '🌧️'
+  if (/雪/.test(text)) return '❄️'
+  if (/雾|霾/.test(text)) return '🌫️'
+  return '🌤️'
 }
 
 // ===== 月度旅行指数：解析 bestSeason 生成 12 月数据 =====
@@ -333,6 +396,30 @@ watch(tab, (v) => {
 
 /* 季节 Tab */
 .season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+.season-best, .season-weather, .season-now, .season-7d { padding: 24px; }
+.season-now {
+  background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+}
+.season-7d {
+  background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+}
+.daily-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-top: 8px;
+}
+.daily-item {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 8px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 8px;
+  min-width: 50px;
+}
+.daily-date { font-size: 11px; color: #666; }
+.daily-icon { font-size: 20px; }
+.daily-temp { font-size: 11px; color: #667eea; font-weight: 600; }
 .season-best, .season-weather { padding: 24px; }
 .season-icon { font-size: 32px; color: var(--accent); margin-bottom: 10px; }
 .season-label { font-size: 13px; color: var(--text-light); margin-bottom: 6px; }

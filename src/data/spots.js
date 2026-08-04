@@ -113,6 +113,225 @@ export const spots = [
     openTime: '全天', ticket: '免费', traffic: '公交29路', duration: '2小时',
     tips: '文艺小店+海鲜大排档，傍晚最热闹。',
     intro: '曾经的渔村，如今的"最文艺渔村"，文创小店、民宿、小吃云集。'
+  },
+
+  // ===== 北京 =====
+  {
+    id: 'beijing-gugong', cityId: 'beijing', name: '故宫博物院',
+    cover: 'img/xian-bingmayong.png', rating: 4.9, tags: ['人文', '必去', '世界遗产'],
+    openTime: '08:30-17:00(周一闭馆)', ticket: '60元', traffic: '地铁1号线天安门东站', duration: '半天-一天',
+    tips: '提前网上预约；走午门入，神武门出；珍宝馆和钟表馆值得一看。',
+    intro: '明清两代皇家宫殿，世界文化遗产，藏品百万件，是中国古代宫廷艺术的集大成者。'
+  },
+  {
+    id: 'beijing-changcheng', cityId: 'beijing', name: '八达岭长城',
+    cover: 'img/xian-chengqiang.png', rating: 4.8, tags: ['自然', '人文', '必去'],
+    openTime: '07:30-17:30', ticket: '40元', traffic: 'S2线火车至青龙桥站', duration: '半天',
+    tips: '建议坐缆车上行，步行下山；避开节假日。',
+    intro: '"不到长城非好汉"，明代长城保存最完好的一段，气势磅礴。'
+  },
+  {
+    id: 'beijing-summerpalace', cityId: 'beijing', name: '颐和园',
+    cover: 'img/hangzhou-xihu.png', rating: 4.7, tags: ['人文', '自然'],
+    openTime: '07:00-18:00', ticket: '30元', traffic: '地铁4号线北宫门站', duration: '半天',
+    tips: '从北宫门入，游苏州街到昆明湖；十七孔桥夕阳绝美。',
+    intro: '中国现存规模最大、保存最完整的皇家园林，皇家御苑之典范。'
+  },
+
+  // ===== 上海 =====
+  {
+    id: 'shanghai-bund', cityId: 'shanghai', name: '外滩',
+    cover: 'img/hangzhou-cover.png', rating: 4.8, tags: ['人文', '夜游', '必去'],
+    openTime: '全天', ticket: '免费', traffic: '地铁2号线南京东路站', duration: '2-3小时',
+    tips: '傍晚看两岸夜景最美；和平饭店至十六铺段经典。',
+    intro: '万国建筑博览群与陆家嘴天际线的完美对照，上海的城市名片。'
+  },
+  {
+    id: 'shanghai-yuyuan', cityId: 'shanghai', name: '豫园',
+    cover: 'img/lijiang-oldtown.png', rating: 4.5, tags: ['人文', '美食'],
+    openTime: '08:30-17:00', ticket: '40元', traffic: '地铁10号线豫园站', duration: '2-3小时',
+    tips: '城隍庙小吃丰富；南翔小笼包必尝。',
+    intro: '明代古典园林，江南水乡韵味，与城隍庙美食商圈相连。'
+  },
+
+  // ===== 广州 =====
+  {
+    id: 'guangzhou-tianhe', cityId: 'guangzhou', name: '广州塔',
+    cover: 'img/xiamen-g1.png', rating: 4.6, tags: ['夜游', '必去'],
+    openTime: '09:30-22:30', ticket: '150元', traffic: '地铁3号线广州塔站', duration: '2小时',
+    tips: '建议傍晚登塔看日落变夜景；摩天轮项目另收费。',
+    intro: '世界第三高塔，"小蛮腰"造型独特，俯瞰羊城夜景。'
+  },
+  {
+    id: 'guangzhou-shamian', cityId: 'guangzhou', name: '沙面岛',
+    cover: 'img/xiamen-g3.png', rating: 4.5, tags: ['人文', '拍照'],
+    openTime: '全天', ticket: '免费', traffic: '地铁6号线文化公园站', duration: '2-3小时',
+    tips: '欧陆风情建筑群，适合拍照；白天光线好。',
+    intro: '昔日租界区，150多座欧式建筑，被称为"羊城第九景"。'
+  },
+
+  // ===== 深圳 =====
+  {
+    id: 'shenzhen-oct', cityId: 'shenzhen', name: '世界之窗',
+    cover: 'img/xiamen-g1.png', rating: 4.3, tags: ['亲子', '主题乐园'],
+    openTime: '09:00-22:00', ticket: '220元', traffic: '地铁1号线世界之窗站', duration: '一天',
+    tips: '微缩世界景点，适合带孩子；夜游门票更便宜。',
+    intro: '将世界奇观微缩展示的主题公园，深圳标志性景点。'
+  },
+  {
+    id: 'shenzhen-xiao', cityId: 'shenzhen', name: '深圳湾公园',
+    cover: 'img/xiamen-huandao.png', rating: 4.5, tags: ['自然', '骑行'],
+    openTime: '全天', ticket: '免费', traffic: '地铁2号线深圳湾公园站', duration: '3-4小时',
+    tips: '海滨长廊骑行绝佳；看香港日落。',
+    intro: '滨海生态公园，遥望香港，候鸟栖息地，都市中的绿洲。'
+  },
+
+  // ===== 重庆 =====
+  {
+    id: 'chongqing-hongyadong', cityId: 'chongqing', name: '洪崖洞',
+    cover: 'img/xian-huiminjie.png', rating: 4.6, tags: ['夜游', '美食', '必去'],
+    openTime: '全天', ticket: '免费', traffic: '地铁6号线小什字站', duration: '2-3小时',
+    tips: '千厮门大桥拍照视角好；11楼观景台免费。',
+    intro: '巴渝吊脚楼风格建筑群，《千与千寻》现实版，夜景璀璨。'
+  },
+  {
+    id: 'chongqing-ciqikou', cityId: 'chongqing', name: '磁器口古镇',
+    cover: 'img/lijiang-shuhe.png', rating: 4.4, tags: ['人文', '美食'],
+    openTime: '全天', ticket: '免费', traffic: '地铁1号线磁器口站', duration: '2-3小时',
+    tips: '陈麻花必买；古镇深处更清净。',
+    intro: '千年古镇，明清风貌，"一条石板路，千年磁器口"。'
+  },
+
+  // ===== 苏州 =====
+  {
+    id: 'suzhou-zizhuyuan', cityId: 'hangzhou-new', name: '拙政园',
+    cover: 'img/hangzhou-xixi.png', rating: 4.8, tags: ['人文', '必去', '世界遗产'],
+    openTime: '07:30-17:00', ticket: '90元', traffic: '地铁4号线北寺塔站', duration: '3小时',
+    tips: '建议早上入园；与狮子林联票更划算。',
+    intro: '中国四大名园之首，明代私家园林典范，世界文化遗产。'
+  },
+  {
+    id: 'suzhou-zhouzhuang', cityId: 'hangzhou-new', name: '周庄古镇',
+    cover: 'img/lijiang-oldtown.png', rating: 4.5, tags: ['人文', '水乡'],
+    openTime: '08:00-21:00', ticket: '100元', traffic: '苏州汽车北站乘班车', duration: '一天',
+    tips: '摇橹船游古镇；夜游双桥绝美。',
+    intro: '"中国第一水乡"，小桥流水人家，江南水乡代表。'
+  },
+
+  // ===== 南京 =====
+  {
+    id: 'nanjing-zhongshan', cityId: 'nanjing', name: '中山陵',
+    cover: 'img/xian-bingmayong.png', rating: 4.7, tags: ['人文', '必去'],
+    openTime: '08:30-17:30', ticket: '免费', traffic: '地铁2号线苜蓿园站', duration: '3小时',
+    tips: '紫金山风景区内，可连游明孝陵。',
+    intro: '孙中山先生陵墓，建筑宏伟，钟山风景区核心景点。'
+  },
+
+  // ===== 昆明 =====
+  {
+    id: 'kunming-dianchi', cityId: 'chengdu-new', name: '滇池',
+    cover: 'img/lijiang-g2.png', rating: 4.5, tags: ['自然', '骑行'],
+    openTime: '全天', ticket: '免费', traffic: '公交24路海埂公园站', duration: '半天',
+    tips: '冬季红嘴鸥；骑行环湖。',
+    intro: '云南最大湖泊，高原明珠，海埂大坝看海鸥。'
+  },
+
+  // ===== 大理 =====
+  {
+    id: 'dali-erhai', cityId: 'hangzhou-west', name: '洱海',
+    cover: 'img/xiamen-huandao.png', rating: 4.8, tags: ['自然', '骑行', '必去'],
+    openTime: '全天', ticket: '免费', traffic: '大理古城租电瓶车', duration: '一天',
+    tips: '环洱海骑行/租车；喜洲古镇、双廊必停。',
+    intro: '云南第二大淡水湖，"风花雪月"四景之一，文艺圣地。'
+  },
+  {
+    id: 'dali-santa', cityId: 'hangzhou-west', name: '崇圣寺三塔',
+    cover: 'img/xian-chengqiang.png', rating: 4.6, tags: ['人文', '世界遗产'],
+    openTime: '07:00-19:00', ticket: '75元', traffic: '公交三塔专线', duration: '2小时',
+    tips: '三塔倒影公园拍照最佳；早去人少。',
+    intro: '大理标志性建筑，南诏国遗迹，世界文化遗产。'
+  },
+
+  // ===== 青岛 =====
+  {
+    id: 'qingdao-zhanqiao', cityId: 'xian-new', name: '栈桥',
+    cover: 'img/xiamen-g1.png', rating: 4.4, tags: ['自然', '必去'],
+    openTime: '全天', ticket: '免费', traffic: '地铁3号线青岛站', duration: '1-2小时',
+    tips: '回澜阁是尽头；海鸥盘旋。',
+    intro: '青岛百年地标，回澜阁深入大海，海鸥飞舞。'
+  },
+  {
+    id: 'qingdao-laoshan', cityId: 'xian-new', name: '崂山',
+    cover: 'img/lijiang-g1.png', rating: 4.7, tags: ['自然', '必去'],
+    openTime: '06:00-18:00', ticket: '130元', traffic: '崂山旅游专线', duration: '一天',
+    tips: '海上名山第一；建议游览仰口或太清线。',
+    intro: '海上名山第一，道教发源地之一，海山胜景。'
+  },
+
+  // ===== 三亚 =====
+  {
+    id: 'sanya-yalongbay', cityId: 'lijiang-new', name: '亚龙湾',
+    cover: 'img/xiamen-gulangyu.png', rating: 4.7, tags: ['自然', '海滩', '必去'],
+    openTime: '全天', ticket: '免费', traffic: '公交15路', duration: '半天-一天',
+    tips: '沙质最细；带好防晒。',
+    intro: '"天下第一湾"，7公里银白沙滩，清澈海水。'
+  },
+  {
+    id: 'sanya-tianya', cityId: 'lijiang-new', name: '天涯海角',
+    cover: 'img/xiamen-g2.png', rating: 4.5, tags: ['自然', '打卡'],
+    openTime: '07:00-18:00', ticket: '68元', traffic: '公交16路', duration: '3小时',
+    tips: '石刻"天涯""海角"打卡；风大浪急注意安全。',
+    intro: '海南南端，"天涯""海角"石刻，浪漫地标。'
+  },
+
+  // ===== 哈尔滨 =====
+  {
+    id: 'haerbin-central', cityId: 'xiamen-new', name: '中央大街',
+    cover: 'img/xian-g1.png', rating: 4.6, tags: ['人文', '夜游'],
+    openTime: '全天', ticket: '免费', traffic: '地铁1号线兆麟街站', duration: '2-3小时',
+    tips: '马迭尔冰棍必吃；看索菲亚教堂。',
+    intro: '亚洲最长的步行街，俄式建筑云集，冰雕艺术展。'
+  },
+  {
+    id: 'haerbin-sophia', cityId: 'xiamen-new', name: '圣索菲亚大教堂',
+    cover: 'img/xian-chengqiang.png', rating: 4.5, tags: ['人文', '拍照'],
+    openTime: '08:30-17:00', ticket: '40元', traffic: '地铁1号线兆麟街站', duration: '1-2小时',
+    tips: '广场拍照；内部有哈尔滨历史展。',
+    intro: '远东最大东正教教堂，砖石结构，拜占庭风格。'
+  },
+
+  // ===== 张家界 =====
+  {
+    id: 'zhangjiajie-wuling', cityId: 'beijing-new', name: '武陵源',
+    cover: 'img/xian-chengqiang.png', rating: 4.9, tags: ['自然', '必去', '世界遗产'],
+    openTime: '07:00-18:00', ticket: '228元', traffic: '张家界火车站乘专线', duration: '2-3天',
+    tips: '阿凡达取景地；建议住山上客栈省时间。',
+    intro: '三千奇峰八百秀水，世界自然遗产，"阿凡达"悬浮山原型。'
+  },
+  {
+    id: 'zhangjiajie-tianmen', cityId: 'beijing-new', name: '天门山',
+    cover: 'img/lijiang-g1.png', rating: 4.7, tags: ['自然', '刺激'],
+    openTime: '07:30-18:00', ticket: '278元', traffic: '索道直达山顶', duration: '半天-一天',
+    tips: '世界最长索道；玻璃栈道需穿鞋套。',
+    intro: '天门洞奇观，通天大道99道弯，玻璃栈道刺激。'
+  },
+
+  // ===== 桂林 =====
+  {
+    id: 'guilin-lijiang', cityId: 'shanghai-new', name: '漓江',
+    cover: 'img/lijiang-g1.png', rating: 4.8, tags: ['自然', '必去'],
+    openTime: '全天(游船)', ticket: '215元游船', traffic: '磨盘山码头乘船', duration: '4-5小时',
+    tips: '漓江精华段：杨堤-兴坪；20元人民币背面图案。',
+    intro: '"桂林山水甲天下"代表，喀斯特地貌山水画廊。'
+  },
+
+  // ===== 九寨沟 =====
+  {
+    id: 'jiuzhai-canghai', cityId: 'guangzhou-new', name: '五彩池',
+    cover: 'img/chengdu-dujiangyan.png', rating: 4.9, tags: ['自然', '必去', '世界遗产'],
+    openTime: '07:00-17:00', ticket: '169元(含观光车)', traffic: '九寨沟机场大巴', duration: '一天',
+    tips: '海子彩林绝美；秋季最佳；高原反应注意。',
+    intro: '九寨沟灵魂景点，多彩池水，钙化彩池，人间仙境。'
   }
 ]
 
