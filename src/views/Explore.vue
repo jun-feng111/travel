@@ -242,7 +242,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Search, Loading } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
-import { getCityCover } from '../composables/useImageLoader'
+import { getCityImage, getSpotImage, getFoodImage, getGuideImage } from '../composables/useImageSource'
 import { useFavorites } from '../composables/useFavorites'
 import { searchAll, cityHelpers, guideHelpers, cities, guides } from '../data/index'
 
@@ -311,47 +311,21 @@ function toggleFav(type, id, item) {
 }
 
 function getCityImg(city) {
-  if (!city) return ''
-  const result = getCityCover(city.lng, city.lat, city.cover, city.cover)
-  return result.primary
+  return getCityImage(city)
 }
 
 function getSpotImg(spot) {
-  if (!spot) return ''
-  const lng = spot.lng || 116.4
-  const lat = spot.lat || 39.9
-  const result = getCityCover(lng, lat, spot.cover, spot.cover)
-  return result.primary
+  return getSpotImage(spot)
 }
 
 function getFoodImg(food) {
-  if (!food) return ''
-  let lng = 116.4
-  let lat = 39.9
-  if (food.cityId) {
-    const city = cityHelpers.findById(food.cityId)
-    if (city) {
-      lng = city.lng
-      lat = city.lat
-    }
-  }
-  const result = getCityCover(lng, lat, food.cover, food.cover)
-  return result.primary
+  const city = food.cityId ? cityHelpers.findById(food.cityId) : null
+  return getFoodImage(food, city)
 }
 
 function getGuideImg(guide) {
-  if (!guide) return ''
-  let lng = 116.4
-  let lat = 39.9
-  if (guide.cityId) {
-    const city = cityHelpers.findById(guide.cityId)
-    if (city) {
-      lng = city.lng
-      lat = city.lat
-    }
-  }
-  const result = getCityCover(lng, lat, guide.cover, guide.cover)
-  return result.primary
+  const city = guide.cityId ? cityHelpers.findById(guide.cityId) : null
+  return getGuideImage(guide, city)
 }
 
 if (route.query.kw) {

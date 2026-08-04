@@ -160,7 +160,7 @@
 import { ref, computed } from 'vue'
 import { Star, Close } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
-import { getCityCover } from '../composables/useImageLoader'
+import { getCityImage, getSpotImage, getFoodImage, getGuideImage } from '../composables/useImageSource'
 import { useFavorites } from '../composables/useFavorites'
 import {
   cityHelpers,
@@ -207,49 +207,22 @@ function removeFav(type, id) {
 }
 
 function getCityImg(item) {
-  if (!item) return ''
-  const lng = item.lng || 116.4
-  const lat = item.lat || 39.9
-  const result = getCityCover(lng, lat, item.cover, item.cover)
-  return result.primary
+  return getCityImage(item)
 }
 
 function getSpotImg(item) {
-  if (!item) return ''
-  const lng = item.lng || 116.4
-  const lat = item.lat || 39.9
-  const result = getCityCover(lng, lat, item.cover, item.cover)
-  return result.primary
+  const city = item.cityId ? cityHelpers.findById(item.cityId) : null
+  return getSpotImage(item, city)
 }
 
 function getFoodImg(item) {
-  if (!item) return ''
-  let lng = 116.4
-  let lat = 39.9
-  if (item.cityId) {
-    const city = cityHelpers.findById(item.cityId)
-    if (city) {
-      lng = city.lng
-      lat = city.lat
-    }
-  }
-  const result = getCityCover(lng, lat, item.cover, item.cover)
-  return result.primary
+  const city = item.cityId ? cityHelpers.findById(item.cityId) : null
+  return getFoodImage(item, city)
 }
 
 function getGuideImg(item) {
-  if (!item) return ''
-  let lng = 116.4
-  let lat = 39.9
-  if (item.cityId) {
-    const city = cityHelpers.findById(item.cityId)
-    if (city) {
-      lng = city.lng
-      lat = city.lat
-    }
-  }
-  const result = getCityCover(lng, lat, item.cover, item.cover)
-  return result.primary
+  const city = item.cityId ? cityHelpers.findById(item.cityId) : null
+  return getGuideImage(item, city)
 }
 </script>
 

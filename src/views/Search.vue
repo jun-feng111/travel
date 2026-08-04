@@ -217,7 +217,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
-import { getCityCover } from '../composables/useImageLoader'
+import { getCityImage, getSpotImage, getFoodImage, getGuideImage } from '../composables/useImageSource'
 import {
   cityHelpers,
   spotHelpers,
@@ -337,35 +337,21 @@ function getTabCount(key) {
 }
 
 function getCityImg(city) {
-  if (!city) return ''
-  const result = getCityCover(city.lng, city.lat, city.cover, city.cover)
-  return result.primary
+  return getCityImage(city)
 }
 
 function getSpotImg(spot) {
-  if (!spot) return ''
-  const lng = spot.lng || 116.4
-  const lat = spot.lat || 39.9
-  const result = getCityCover(lng, lat, spot.cover, spot.cover)
-  return result.primary
+  return getSpotImage(spot)
 }
 
 function getFoodImg(food) {
-  if (!food) return ''
   const city = food.cityId ? cityHelpers.findById(food.cityId) : null
-  const lng = city?.lng || 116.4
-  const lat = city?.lat || 39.9
-  const result = getCityCover(lng, lat, food.cover, food.cover)
-  return result.primary
+  return getFoodImage(food, city)
 }
 
 function getGuideImg(guide) {
-  if (!guide) return ''
   const city = guide.cityId ? cityHelpers.findById(guide.cityId) : null
-  const lng = city?.lng || 116.4
-  const lat = city?.lat || 39.9
-  const result = getCityCover(lng, lat, guide.cover, guide.cover)
-  return result.primary
+  return getGuideImage(guide, city)
 }
 
 if (kw.value) {

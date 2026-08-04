@@ -1,4 +1,5 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { getCityImage, toKeywords, hashSeed, getImageUrl } from './useImageSource'
 import { getStaticMapUrl } from '../api/amap'
 
 const IMAGE_CACHE = new Map()
@@ -46,34 +47,46 @@ function observeIntersection(el, callback) {
 }
 
 /**
- * 城市封面图片生成器
- * 根据经纬度和关键词生成高德地图静态图，并提供 Unsplash 作为备选方案
+ * 城市封面图片生成器（薄包装）
  *
- * @param {number} lng - 经度
- * @param {number} lat - 纬度
- * @param {string} [keywords=''] - 搜索关键词，用于 Unsplash 备选
- * @param {string} [fallbackUrl=''] - 最终兜底图片 URL
+ * 已重构：返回真实风景图（基于 LoremFlickr），不再返回地图静态图。
+ * 地图功能由 CityMap.vue / CityDetail 地图 Tab 通过 Leaflet 独立提供。
+ *
+ * 为了不破坏旧调用方（getCityCover(lng, lat, keywords, fallback)），
+ * 这里把参数转换为 useImageSource 的城市图片 URL。
+ *
+ * @param {number} lng - 经度（保留兼容，不再用于生成地图）
+ * @param {number} lat - 纬度（保留兼容，不再用于生成地图）
+ * @param {string} [keywords=''] - 关键词，将作为 LoremFlickr 搜索词
+ * @param {string} [fallbackUrl=''] - 兼容参数，已忽略
  * @returns {{
  *   primary: string,
  *   fallbacks: string[],
- *   source: 'amap' | 'unsplash' | 'fallback'
+ *   source: 'loremflickr'
  * }}
  */
 export function getCityCover(lng, lat, keywords = '', fallbackUrl = '') {
-  const amapUrl = getStaticMapUrl(lng, lat, 800, 500, 11)
-
-  const keyword = encodeURIComponent(keywords || 'city travel landscape')
-  const unsplashUrl = `https://source.unsplash.com/800x500/?${keyword}`
-
-  const fallbacks = []
-  if (unsplashUrl) fallbacks.push(unsplashUrl)
-  if (fallbackUrl) fallbacks.push(fallbackUrl)
-
+  // 把传入的关键词转成 LoremFlickr 可用的逗号分隔形式
+  const kw = keywords
+    ? toKeywords(keywords)
+    : 'china,travel,landscape'
+  // 用 keywords 字符串本身做 seed，保证同关键词返回同图
+  const seed = hashSeed(keywords || `${lng},${lat}`)
+  const primary = getImageUrl(kw, seed)
   return {
-    primary: amapUrl,
-    fallbacks,
-    source: 'amap'
+    primary,
+    fallbacks: [],
+    source: 'loremflickr'
   }
+}
+
+/**
+ * 城市封面（推荐新用法） - 直接传城市对象
+ * @param {Object} city - cities.js 中的城市对象
+ * @returns {string} 图片 URL
+ */
+export function getCityCoverByObj(city) {
+  return getCityImage(city)
 }
 
 /**

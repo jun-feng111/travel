@@ -87,9 +87,7 @@
             位置导航
           </h2>
           <div class="map-card">
-            <div class="map-placeholder" :style="{ background: mapUrl }">
-              <div class="map-marker">📍</div>
-            </div>
+            <div id="spotMiniMap" class="map-placeholder"></div>
             <div class="map-info">
               <div class="map-coords">
                 <span>经度: {{ spot.lng }}</span>
@@ -171,7 +169,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   ArrowLeft,
@@ -185,7 +183,7 @@ import {
   Guide
 } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
-import { getCityCover } from '../composables/useImageLoader'
+import { getSpotImage, getCityImage } from '../composables/useImageSource'
 import { useFavorites } from '../composables/useFavorites'
 import { spotHelpers, cityHelpers } from '../data/index'
 
@@ -197,22 +195,12 @@ const city = computed(() => spot.value ? cityHelpers.findById(spot.value.cityId)
 
 const spotImg = computed(() => {
   if (!spot.value) return ''
-  const lng = spot.value.lng || 116.4
-  const lat = spot.value.lat || 39.9
-  const result = getCityCover(lng, lat, spot.value.cover, spot.value.cover)
-  return result.primary
+  return getSpotImage(spot.value, city.value)
 })
 
 const cityImg = computed(() => {
   if (!city.value) return ''
-  const result = getCityCover(city.value.lng, city.value.lat, city.value.cover, city.value.cover)
-  return result.primary
-})
-
-const mapUrl = computed(() => {
-  if (!spot.value) return ''
-  const { lng, lat } = spot.value
-  return `https://webst.amap.com/maps/staticmap?location=${lng},${lat}&zoom=15&width=600&height=300&key=91aa55be616abb60c334f6b734eb1279`
+  return getCityImage(city.value)
 })
 
 const nearbySpots = computed(() => {
@@ -224,10 +212,7 @@ const nearbySpots = computed(() => {
 })
 
 function getNearbyImg(s) {
-  const lng = s.lng || 116.4
-  const lat = s.lat || 39.9
-  const result = getCityCover(lng, lat, s.cover, s.cover)
-  return result.primary
+  return getSpotImage(s, city.value)
 }
 
 const isFav = computed(() => {
@@ -250,6 +235,38 @@ function toggleFav() {
     ticket: spot.value.ticket
   })
 }
+
+async function initMiniMap() {
+  if (!spot.value) return
+  if (!window.L) {
+    const css = document.createElement('link')
+    css.rel = 'stylesheet'
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+    document.head.appendChild(css)
+    await new Promise((res, rej) => {
+      const s = document.createElement('script')
+      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+      s.onload = res
+      s.onerror = rej
+      document.head.appendChild(s)
+    })
+  }
+  await nextTick()
+  const el = document.getElementById('spotMiniMap')
+  if (!el || !window.L) return
+  const { lng, lat } = spot.value
+  const map = window.L.map('spotMiniMap').setView([lat, lng], 14)
+  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map)
+  const marker = window.L.marker([lat, lng]).addTo(map)
+  marker.bindPopup(`<strong>${spot.value.name}</strong><br>★ ${spot.value.rating}`)
+  setTimeout(() => map.invalidateSize(), 200)
+}
+
+onMounted(() => {
+  initMiniMap()
+})
 </script>
 
 <style scoped>

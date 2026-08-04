@@ -332,7 +332,7 @@ import { cities, getCity, regions } from '../data/cities'
 import { guides } from '../data/guides'
 import { spots } from '../data/spots'
 import { foods, getPopularFoods } from '../data/foods'
-import { getCityCover } from '../composables/useImageLoader'
+import { getCityImage, getSpotImage, getFoodImage, getGuideImage } from '../composables/useImageSource'
 
 const router = useRouter()
 const searchKw = ref('')
@@ -389,35 +389,22 @@ const topFoods = computed(() => {
 })
 
 function getCityCoverUrl(city) {
-  const cover = getCityCover(city.lng, city.lat, city.name)
-  return cover.primary
+  return getCityImage(city)
 }
 
 function getSpotCoverUrl(spot) {
   const city = getCity(spot.cityId)
-  if (city) {
-    const cover = getCityCover(city.lng, city.lat, spot.name)
-    return cover.primary
-  }
-  return ''
+  return getSpotImage(spot, city)
 }
 
 function getFoodCoverUrl(food) {
   const city = getCity(food.cityId)
-  if (city) {
-    const cover = getCityCover(city.lng, city.lat, food.name)
-    return cover.primary
-  }
-  return ''
+  return getFoodImage(food, city)
 }
 
 function getGuideCoverUrl(guide) {
   const city = getCity(guide.cityId)
-  if (city) {
-    const cover = getCityCover(city.lng, city.lat, guide.cityName || city.name)
-    return cover.primary
-  }
-  return ''
+  return getGuideImage(guide, city)
 }
 
 function getCityName(id) {

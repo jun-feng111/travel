@@ -71,6 +71,27 @@
       </div>
     </div>
 
+    <!-- 小地图预览卡片 -->
+    <div class="container">
+      <div class="map-preview-card">
+        <div class="map-preview-body">
+          <div class="map-preview-info">
+            <div class="mpi-icon">
+              <el-icon><MapLocation /></el-icon>
+            </div>
+            <div class="mpi-text">
+              <h3>{{ city.name }} 互动地图</h3>
+              <p>{{ spots.length }} 个景点 · 点击查看详细位置</p>
+            </div>
+          </div>
+          <button class="map-preview-btn" @click="tab = 'map'">
+            打开地图
+            <el-icon><ArrowRight /></el-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Tab Navigation -->
     <div class="container">
       <div class="tab-nav">
@@ -251,7 +272,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   Star, StarFilled, Sunny, Cloudy, Location, Calendar,
   Shop, CircleCheckFilled, LocationFilled,
-  View, Food, Reading, DataAnalysis, MapLocation
+  View, Food, Reading, DataAnalysis, MapLocation, ArrowRight
 } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
 import { getCity } from '../data/cities'
@@ -260,7 +281,7 @@ import { guidesByCity } from '../data/guides'
 import { foodsByCity } from '../data/foods'
 import { useFavorites } from '../composables/useFavorites'
 import { useWeather } from '../composables/useWeather'
-import { getCityCover } from '../composables/useImageLoader'
+import { getCityImage, getSpotImage, getFoodImage, getGuideImage } from '../composables/useImageSource'
 
 const route = useRoute()
 const router = useRouter()
@@ -274,8 +295,7 @@ const weather = computed(() => ({ now: now.value, daily: daily.value }))
 
 const heroCoverUrl = computed(() => {
   if (!city.value) return ''
-  const cover = getCityCover(city.value.lng, city.value.lat, city.value.name)
-  return cover.primary
+  return getCityImage(city.value)
 })
 
 onMounted(() => {
@@ -357,21 +377,15 @@ function goSpot(id) { router.push(`/spot/${id}`) }
 function goGuide(id) { router.push(`/guide/${id}`) }
 
 function getSpotCoverUrl(s) {
-  if (!city.value) return ''
-  const cover = getCityCover(city.value.lng, city.value.lat, s.name)
-  return cover.primary
+  return getSpotImage(s, city.value)
 }
 
 function getFoodCoverUrl(f) {
-  if (!city.value) return ''
-  const cover = getCityCover(city.value.lng, city.value.lat, f.name)
-  return cover.primary
+  return getFoodImage(f, city.value)
 }
 
 function getGuideCoverUrl(g) {
-  if (!city.value) return ''
-  const cover = getCityCover(city.value.lng, city.value.lat, g.title)
-  return cover.primary
+  return getGuideImage(g, city.value)
 }
 
 function getWeatherEmoji(text) {
@@ -620,6 +634,82 @@ watch(tab, (v) => {
 .qi-body { display: flex; flex-direction: column; min-width: 0; }
 .qi-label { font-size: 12px; color: #718096; margin-bottom: 2px; }
 .qi-value { font-size: 15px; font-weight: 600; color: #1a365d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ===== Map Preview Card ===== */
+.map-preview-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+  margin: 20px 24px 0;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(20,60,60,0.08);
+  border: 1px solid rgba(31,158,143,0.12);
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+.map-preview-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 120px; height: 100%;
+  background: linear-gradient(135deg, transparent, rgba(31,158,143,0.06));
+  pointer-events: none;
+}
+.map-preview-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.map-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.mpi-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4fd1c5, #1f9e8f);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(31,158,143,0.3);
+}
+.mpi-text h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a365d;
+  margin: 0 0 4px;
+}
+.mpi-text p {
+  font-size: 13px;
+  color: #718096;
+  margin: 0;
+}
+.map-preview-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #1f9e8f, #14746a);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.map-preview-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(31,158,143,0.35);
+}
+@media (max-width: 768px) {
+  .map-preview-card { margin: 16px 16px 0; }
+  .map-preview-body { padding: 16px 20px; }
+}
 
 /* ===== Tab Nav ===== */
 .tab-nav {

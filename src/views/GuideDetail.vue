@@ -240,7 +240,7 @@ import {
   InfoFilled
 } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
-import { getCityCover } from '../composables/useImageLoader'
+import { getGuideImage, getCityImage } from '../composables/useImageSource'
 import { useFavorites } from '../composables/useFavorites'
 import { useWeather } from '../composables/useWeather'
 import { guideHelpers, cityHelpers } from '../data/index'
@@ -254,16 +254,12 @@ const city = computed(() => guide.value ? cityHelpers.findById(guide.value.cityI
 
 const guideImg = computed(() => {
   if (!guide.value) return ''
-  const lng = city.value?.lng || 116.4
-  const lat = city.value?.lat || 39.9
-  const result = getCityCover(lng, lat, guide.value.cover, guide.value.cover)
-  return result.primary
+  return getGuideImage(guide.value, city.value)
 })
 
 const cityImg = computed(() => {
   if (!city.value) return ''
-  const result = getCityCover(city.value.lng, city.value.lat, city.value.cover, city.value.cover)
-  return result.primary
+  return getCityImage(city.value)
 })
 
 const isFav = computed(() => {

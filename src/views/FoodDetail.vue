@@ -129,7 +129,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft, Star, StarFilled } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
-import { getCityCover } from '../composables/useImageLoader'
+import { getFoodImage, getCityImage } from '../composables/useImageSource'
 import { useFavorites } from '../composables/useFavorites'
 import { foodHelpers, cityHelpers } from '../data/index'
 
@@ -141,18 +141,12 @@ const city = computed(() => food.value ? cityHelpers.findById(food.value.cityId)
 
 const foodImg = computed(() => {
   if (!food.value) return ''
-  if (city.value) {
-    const cover = getCityCover(city.value.lng, city.value.lat, food.value.name + ' food')
-    return cover.primary
-  }
-  const keyword = encodeURIComponent(food.value.name + ' chinese food')
-  return `https://source.unsplash.com/600x400/?${keyword}`
+  return getFoodImage(food.value, city.value)
 })
 
 const cityImg = computed(() => {
   if (!city.value) return ''
-  const cover = getCityCover(city.value.lng, city.value.lat, city.value.name)
-  return cover.primary
+  return getCityImage(city.value)
 })
 
 const nearbyFoods = computed(() => {
@@ -163,9 +157,7 @@ const nearbyFoods = computed(() => {
 })
 
 function getNearbyImg(f) {
-  if (!city.value) return ''
-  const cover = getCityCover(city.value.lng, city.value.lat, f.name + ' food')
-  return cover.primary
+  return getFoodImage(f, city.value)
 }
 
 const isFav = computed(() => {

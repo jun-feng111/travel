@@ -68,7 +68,7 @@
 import { ref, computed } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
-import { getCityCover } from '../composables/useImageLoader'
+import { getCityImage } from '../composables/useImageSource'
 import { cityHelpers } from '../data/index'
 
 const region = ref('全部')
@@ -92,9 +92,7 @@ const filtered = computed(() => {
 })
 
 function getCityImg(city) {
-  if (!city) return ''
-  const result = getCityCover(city.lng, city.lat, city.cover, city.cover)
-  return result.primary
+  return getCityImage(city)
 }
 
 function resetFilter() {
