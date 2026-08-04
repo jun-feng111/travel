@@ -10,7 +10,7 @@ export default defineConfig({
         AutoImport({ resolvers: [ElementPlusResolver()] }),
         Components({ resolvers: [ElementPlusResolver()] })
     ],
-    base: '/travel/',
+    base: './',
     server: {
         port: 5173,
         host: true
