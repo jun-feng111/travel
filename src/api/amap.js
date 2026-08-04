@@ -116,3 +116,40 @@ export function getDistrict(adcode) {
     })
   })
 }
+
+export function getStaticMapUrl(lng, lat, width = 750, height = 500, zoom = 11) {
+  const w = Math.max(100, Math.min(width, 1024))
+  const h = Math.max(100, Math.min(height, 1024))
+  const z = Math.max(1, Math.min(zoom, 18))
+  return `https://restapi.amap.com/v3/staticmap?location=${lng},${lat}&zoom=${z}&size=${w}*${h}&key=${AMAP_KEY}`
+}
+
+export function searchNearbyPoi(lng, lat, type, radius = 1000) {
+  return new Promise((resolve, reject) => {
+    const AMap = getAMap()
+    if (!AMap) { reject('AMap not loaded'); return }
+
+    const placeSearch = new AMap.PlaceSearch({
+      map: null,
+      extensions: 'base'
+    })
+
+    placeSearch.searchNearby(type || '餐饮服务', [lng, lat], radius, (status, result) => {
+      if (status === 'complete' && result.poiList) {
+        resolve(result.poiList.pois.map(p => ({
+          id: p.id,
+          name: p.name,
+          address: p.address,
+          location: p.location ? { lng: p.location.lng, lat: p.location.lat } : null,
+          tel: p.tel,
+          type: p.type,
+          distance: p.distance,
+          photos: p.photos ? p.photos.map(ph => ph.url) : [],
+          rating: p.biz_ext?.rating ? parseFloat(p.biz_ext.rating) : null
+        })))
+      } else {
+        resolve([])
+      }
+    })
+  })
+}

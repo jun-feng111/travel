@@ -2,18 +2,20 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   { path: '/', name: 'home', component: () => import('../views/Home.vue') },
+  { path: '/explore', name: 'explore', component: () => import('../views/Explore.vue') },
+  { path: '/search', name: 'search', component: () => import('../views/Search.vue') },
   { path: '/cities', name: 'cities', component: () => import('../views/Cities.vue') },
   { path: '/city/:cityId', name: 'city', component: () => import('../views/CityDetail.vue') },
   { path: '/spot/:spotId', name: 'spot', component: () => import('../views/SpotDetail.vue') },
+  { path: '/food/:foodId', name: 'food', component: () => import('../views/FoodDetail.vue') },
   { path: '/guide/:guideId', name: 'guide', component: () => import('../views/GuideDetail.vue') },
+  { path: '/guides', name: 'guides', component: () => import('../views/Search.vue'), props: { initialTab: 'guide' } },
   { path: '/planner', name: 'planner', component: () => import('../views/Planner.vue') },
+  { path: '/plan-detail/:planId', name: 'planDetail', component: () => import('../views/PlanDetail.vue') },
   { path: '/map/:cityId', name: 'map', component: () => import('../views/CityMap.vue') },
   { path: '/favorites', name: 'favorites', component: () => import('../views/Favorites.vue') },
-  { path: '/tools', name: 'tools', component: () => import('../views/Tools.vue') },
-  { path: '/search', name: 'search', component: () => import('../views/Search.vue') },
-  { path: '/explore', name: 'explore', component: () => import('../views/Explore.vue') },
-  { path: '/plan-detail/:planId', name: 'planDetail', component: () => import('../views/PlanDetail.vue') },
   { path: '/about', name: 'about', component: () => import('../views/About.vue') },
+  { path: '/tools', name: 'tools', component: () => import('../views/Tools.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 

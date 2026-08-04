@@ -1,240 +1,524 @@
 <template>
-  <div class="container fav-page">
-    <h2 class="section-title"><el-icon><Star /></el-icon> 我的收藏</h2>
-    <p class="desc">收藏和攻略保存在本浏览器本地，不会上传服务器。</p>
-
-    <!-- My Plans Section -->
-    <div class="plans-section" v-if="plans.length">
-      <h3 class="section-title">📋 我的攻略（{{ plans.length }}）</h3>
-      <div class="plans-grid">
-        <div v-for="plan in plans" :key="plan.id" class="plan-card" @click="goPlan(plan.id)">
-          <div class="plan-cover" :style="{ background: getGradient(plan.cityName || '旅行') }">
-            <span class="plan-emoji">{{ getEmoji(plan.cityName || '旅行') }}</span>
+  <div class="favorites-page">
+    <div class="fav-header">
+      <div class="container">
+        <h1 class="fav-title">
+          <el-icon><Star /></el-icon> 我的收藏
+        </h1>
+        <p class="fav-sub">管理你收藏的城市、景点、美食和攻略</p>
+        <div class="fav-stats">
+          <div class="stat-item" @click="activeType = 'all'" :class="{ active: activeType === 'all' }">
+            <span class="stat-num">{{ totalCount }}</span>
+            <span class="stat-label">全部</span>
           </div>
-          <div class="plan-info">
-            <h4>{{ plan.cityName }} {{ plan.days }}日游</h4>
-            <p class="plan-style">
-              <el-tag size="small" effect="plain">{{ plan.style || '休闲' }}</el-tag>
-              <span class="plan-date">{{ formatDate(plan.createdAt) }}</span>
-            </p>
-            <p class="plan-budget">预算约 ¥{{ totalBudget(plan) }}</p>
+          <div class="stat-item" @click="activeType = 'cities'" :class="{ active: activeType === 'cities' }">
+            <span class="stat-num">{{ cityItems.length }}</span>
+            <span class="stat-label">城市</span>
           </div>
-          <div class="plan-actions">
-            <el-button type="primary" size="small" @click.stop="goPlan(plan.id)">查看攻略</el-button>
-            <el-button type="danger" size="small" text @click.stop="deletePlan(plan.id)">删除</el-button>
+          <div class="stat-item" @click="activeType = 'spots'" :class="{ active: activeType === 'spots' }">
+            <span class="stat-num">{{ spotItems.length }}</span>
+            <span class="stat-label">景点</span>
+          </div>
+          <div class="stat-item" @click="activeType = 'foods'" :class="{ active: activeType === 'foods' }">
+            <span class="stat-num">{{ foodItems.length }}</span>
+            <span class="stat-label">美食</span>
+          </div>
+          <div class="stat-item" @click="activeType = 'guides'" :class="{ active: activeType === 'guides' }">
+            <span class="stat-num">{{ guideItems.length }}</span>
+            <span class="stat-label">攻略</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Favorites Section -->
-    <div class="favs-section">
-      <h3 class="section-title">❤️ 我的收藏（{{ totalFavCount }}）</h3>
+    <div class="container fav-content">
+      <div v-if="totalCount === 0" class="empty-state">
+        <div class="empty-icon">⭐</div>
+        <h3>还没有收藏</h3>
+        <p>去探索页发现喜欢的城市、景点和攻略吧</p>
+        <div class="empty-actions">
+          <el-button type="primary" size="large" @click="$router.push('/explore')">
+            去探索
+          </el-button>
+          <el-button size="large" @click="$router.push('/cities')">浏览城市</el-button>
+        </div>
+      </div>
 
-      <el-empty v-if="totalFavCount === 0" description="还没有收藏，去探索页发现喜欢的城市和景点吧！">
-        <el-button type="primary" @click="$router.push('/explore')">去探索</el-button>
-      </el-empty>
-
-      <div v-else class="groups">
-        <div v-for="g in groups" :key="g.type" class="group">
-          <h4 class="group-title">{{ g.label }}（{{ g.items.length }}）</h4>
-          <div class="grid grid-cols-3">
-            <div v-for="f in g.items" :key="f.id" class="card fav-card">
-              <div class="fav-cover" :style="{ background: getFavGradient(f.name) }">
-                <span class="fav-emoji">{{ getFavEmoji(f.name, f.type) }}</span>
+      <template v-else>
+        <section v-if="(activeType === 'all' || activeType === 'cities') && cityItems.length" class="fav-section">
+          <h2 class="section-title">
+            <span class="title-bar"></span>
+            收藏的城市 <span class="section-count">{{ cityItems.length }}</span>
+          </h2>
+          <div class="fav-grid grid-cols-4">
+            <div v-for="item in cityItems" :key="item.id" class="fav-card city-card">
+              <div class="fav-cover">
+                <ImgBox :src="getCityImg(item)" :alt="item.name" height="160px" :overlay="true" />
+                <button class="remove-btn" @click.stop="removeFav('cities', item.id)">
+                  <el-icon><Close /></el-icon>
+                </button>
               </div>
               <div class="fav-body">
-                <h4>{{ f.name }}</h4>
-                <p v-if="f.cityName" class="sub">{{ f.cityName }}</p>
-                <p v-else-if="f.desc" class="sub desc-text">{{ f.desc }}</p>
-                <div class="fav-actions">
-                  <router-link v-if="f.type === 'city'" :to="`/city/${f.id}`" class="view-link">查看 →</router-link>
-                  <router-link v-else-if="f.type === 'spot'" :to="`/spot/${f.id}`" class="view-link">查看 →</router-link>
-                  <el-button text type="danger" size="small" @click="removeFav(f)">取消收藏</el-button>
+                <h4>{{ item.name }}</h4>
+                <p>{{ item.slogan }}</p>
+                <div class="fav-footer">
+                  <router-link :to="`/city/${item.id}`" class="view-btn">查看详情 →</router-link>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+
+        <section v-if="(activeType === 'all' || activeType === 'spots') && spotItems.length" class="fav-section">
+          <h2 class="section-title">
+            <span class="title-bar"></span>
+            收藏的景点 <span class="section-count">{{ spotItems.length }}</span>
+          </h2>
+          <div class="fav-grid grid-cols-3">
+            <div v-for="item in spotItems" :key="item.id" class="fav-card spot-card">
+              <div class="fav-cover">
+                <ImgBox :src="getSpotImg(item)" :alt="item.name" height="160px" :overlay="true" />
+                <span class="fav-rating">★ {{ item.rating }}</span>
+                <button class="remove-btn" @click.stop="removeFav('spots', item.id)">
+                  <el-icon><Close /></el-icon>
+                </button>
+              </div>
+              <div class="fav-body">
+                <h4>{{ item.name }}</h4>
+                <p>{{ item.intro }}</p>
+                <div class="fav-tags" v-if="item.tags?.length">
+                  <span v-for="t in item.tags.slice(0, 2)" :key="t" class="mini-tag">{{ t }}</span>
+                </div>
+                <div class="fav-footer">
+                  <router-link :to="`/spot/${item.id}`" class="view-btn">查看详情 →</router-link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section v-if="(activeType === 'all' || activeType === 'foods') && foodItems.length" class="fav-section">
+          <h2 class="section-title">
+            <span class="title-bar"></span>
+            收藏的美食 <span class="section-count">{{ foodItems.length }}</span>
+          </h2>
+          <div class="fav-grid grid-cols-3">
+            <div v-for="item in foodItems" :key="item.id" class="fav-card food-card">
+              <div class="fav-cover">
+                <ImgBox :src="getFoodImg(item)" :alt="item.name" height="160px" :overlay="true" />
+                <span class="fav-type">{{ item.type }}</span>
+                <button class="remove-btn" @click.stop="removeFav('foods', item.id)">
+                  <el-icon><Close /></el-icon>
+                </button>
+              </div>
+              <div class="fav-body">
+                <h4>{{ item.name }}</h4>
+                <p>{{ item.desc }}</p>
+                <div class="fav-meta">
+                  <span>💰 {{ item.priceRange }}</span>
+                  <span class="fav-rating-sm">★ {{ item.rating }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section v-if="(activeType === 'all' || activeType === 'guides') && guideItems.length" class="fav-section">
+          <h2 class="section-title">
+            <span class="title-bar"></span>
+            收藏的攻略 <span class="section-count">{{ guideItems.length }}</span>
+          </h2>
+          <div class="fav-grid grid-cols-2">
+            <div v-for="item in guideItems" :key="item.id" class="fav-card guide-card">
+              <div class="fav-cover">
+                <ImgBox :src="getGuideImg(item)" :alt="item.title" height="180px" :overlay="true" />
+                <span class="fav-days">{{ item.days }}天</span>
+                <button class="remove-btn" @click.stop="removeFav('guides', item.id)">
+                  <el-icon><Close /></el-icon>
+                </button>
+              </div>
+              <div class="fav-body">
+                <h4>{{ item.title }}</h4>
+                <p>{{ item.summary }}</p>
+                <div class="fav-meta">
+                  <span>💰 ¥{{ item.budget?.min }}-{{ item.budget?.max }}</span>
+                  <span>{{ item.days }}天行程</span>
+                </div>
+                <div class="fav-footer">
+                  <router-link :to="`/guide/${item.id}`" class="view-btn">查看攻略 →</router-link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { Star } from '@element-plus/icons-vue'
+import { Star, Close } from '@element-plus/icons-vue'
+import ImgBox from '../components/ImgBox.vue'
+import { getCityCover } from '../composables/useImageLoader'
 import { useFavorites } from '../composables/useFavorites'
-import { getCity, getCityByName } from '../data/cities'
-import { getSpot } from '../data/spots'
+import {
+  cityHelpers,
+  spotHelpers,
+  foodHelpers,
+  guideHelpers,
+  cities
+} from '../data/index'
 
-const router = useRouter()
-const { state, removeFavorite, getPlans } = useFavorites()
+const { state, removeFavorite } = useFavorites()
+const activeType = ref('all')
 
-const plans = computed(() => getPlans())
-
-const totalFavCount = computed(() => {
-  const s = state.value
-  return (s.cities?.length || 0) + (s.spots?.length || 0) + (s.foods?.length || 0)
+const cityItems = computed(() => {
+  const ids = state.value.cities || []
+  const dataMap = state.value.cities_data || {}
+  return ids.map(id => dataMap[id] || cityHelpers.findById(id)).filter(Boolean)
 })
 
-const groups = computed(() => {
-  const s = state.value
-  const defs = [
-    { type: 'cities', label: '城市', ids: s.cities || [], data: s.cities_data || {} },
-    { type: 'spots', label: '景点', ids: s.spots || [], data: s.spots_data || {} },
-    { type: 'foods', label: '美食', ids: s.foods || [], data: s.foods_data || {} }
-  ]
-
-  return defs.map(d => ({
-    type: d.type,
-    label: d.label,
-    items: d.ids.map(id => {
-      const data = d.data[id]
-      if (data) {
-        return { ...data, id, type: d.type.replace('s', '') }
-      }
-      return null
-    }).filter(Boolean)
-  })).filter(g => g.items.length)
+const spotItems = computed(() => {
+  const ids = state.value.spots || []
+  const dataMap = state.value.spots_data || {}
+  return ids.map(id => dataMap[id] || spotHelpers.findById(id)).filter(Boolean)
 })
 
-function removeFav(f) {
-  const type = f.type === 'city' ? 'cities' : f.type + 's'
-  removeFavorite(type, f.id)
+const foodItems = computed(() => {
+  const ids = state.value.foods || []
+  const dataMap = state.value.foods_data || {}
+  return ids.map(id => dataMap[id] || foodHelpers.findById(id)).filter(Boolean)
+})
+
+const guideItems = computed(() => {
+  const ids = state.value.guides || []
+  const dataMap = state.value.guides_data || {}
+  return ids.map(id => dataMap[id] || guideHelpers.findById(id)).filter(Boolean)
+})
+
+const totalCount = computed(() => {
+  return cityItems.value.length + spotItems.value.length +
+    foodItems.value.length + guideItems.value.length
+})
+
+function removeFav(type, id) {
+  removeFavorite(type, id)
 }
 
-function goPlan(id) {
-  router.push(`/plan-detail/${id}`)
+function getCityImg(item) {
+  if (!item) return ''
+  const lng = item.lng || 116.4
+  const lat = item.lat || 39.9
+  const result = getCityCover(lng, lat, item.cover, item.cover)
+  return result.primary
 }
 
-function deletePlan(id) {
-  if (confirm('确定删除这个攻略吗？')) {
-    const { removePlan } = useFavorites()
-    removePlan(id)
+function getSpotImg(item) {
+  if (!item) return ''
+  const lng = item.lng || 116.4
+  const lat = item.lat || 39.9
+  const result = getCityCover(lng, lat, item.cover, item.cover)
+  return result.primary
+}
+
+function getFoodImg(item) {
+  if (!item) return ''
+  let lng = 116.4
+  let lat = 39.9
+  if (item.cityId) {
+    const city = cityHelpers.findById(item.cityId)
+    if (city) {
+      lng = city.lng
+      lat = city.lat
+    }
   }
+  const result = getCityCover(lng, lat, item.cover, item.cover)
+  return result.primary
 }
 
-function totalBudget(plan) {
-  if (!plan.budget) return 0
-  return Object.values(plan.budget).reduce((s, v) => s + v, 0)
-}
-
-function formatDate(iso) {
-  const d = new Date(iso)
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-}
-
-const gradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-]
-
-function getGradient(name) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return gradients[Math.abs(hash) % gradients.length]
-}
-
-function getEmoji(name) {
-  const map = {
-    '北京': '🏯', '上海': '🌃', '广州': '🌴', '深圳': '🏙️', '成都': '🐼',
-    '杭州': '🏞️', '西安': '🏛️', '重庆': '🌉', '苏州': '🏮', '南京': '⛩️',
-    '厦门': '🏖️', '三亚': '🌊', '丽江': '🏔️', '大理': '⛰️', '昆明': '🌸',
-    '青岛': '⚓', '哈尔滨': '❄️', '张家界': '🗻', '桂林': '⛰️', '九寨沟': '🌲'
+function getGuideImg(item) {
+  if (!item) return ''
+  let lng = 116.4
+  let lat = 39.9
+  if (item.cityId) {
+    const city = cityHelpers.findById(item.cityId)
+    if (city) {
+      lng = city.lng
+      lat = city.lat
+    }
   }
-  return map[name] || '📍'
-}
-
-function getFavGradient(name) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return gradients[Math.abs(hash) % gradients.length]
-}
-
-function getFavEmoji(name, type) {
-  if (type === 'city') return getEmoji(name)
-  if (type === 'spot') return '📍'
-  if (type === 'food') return '🍽️'
-  return '⭐'
+  const result = getCityCover(lng, lat, item.cover, item.cover)
+  return result.primary
 }
 </script>
 
 <style scoped>
-.fav-page { padding: 24px 16px; }
-.desc { color: var(--text-light); margin-bottom: 16px; }
+.favorites-page { padding-bottom: 60px; }
 
-.plans-section { margin-bottom: 40px; }
-.plans-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+.fav-header {
+  background: linear-gradient(135deg, #1f9e8f 0%, #14746a 100%);
+  padding: 40px 0 30px;
+  color: #fff;
 }
-.plan-card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
+
+.fav-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fav-title .el-icon { font-size: 28px; }
+
+.fav-sub {
+  font-size: 15px;
+  opacity: 0.9;
+  margin-bottom: 24px;
+}
+
+.fav-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
   display: flex;
   flex-direction: column;
-}
-.plan-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-.plan-cover {
-  height: 120px;
-  display: flex;
   align-items: center;
-  justify-content: center;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-width: 80px;
 }
-.plan-emoji { font-size: 48px; }
-.plan-info { padding: 16px; flex: 1; }
-.plan-info h4 { margin: 0 0 8px; font-size: 18px; }
-.plan-style { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; color: #666; }
-.plan-date { color: #999; font-size: 12px; }
-.plan-budget { color: #667eea; font-weight: 600; margin: 0; }
-.plan-actions { display: flex; gap: 8px; padding: 0 16px 16px; }
 
-.groups { display: flex; flex-direction: column; gap: 24px; }
-.group-title {
-  font-size: 16px;
+.stat-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.stat-item.active {
+  background: #fff;
   color: var(--primary-dark);
-  margin-bottom: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.stat-num { font-size: 22px; font-weight: 800; }
+.stat-label { font-size: 12px; opacity: 0.9; }
+.stat-item.active .stat-label { opacity: 0.7; }
+
+.fav-content { padding: 30px 24px; }
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-state h3 {
+  font-size: 22px;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: var(--text-light);
+  margin-bottom: 24px;
+}
+
+.empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.fav-section { margin-bottom: 40px; }
+
+.section-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 18px;
 }
-.group-title::before {
-  content: '';
+
+.title-bar {
   width: 4px;
-  height: 16px;
-  background: var(--primary);
+  height: 22px;
+  background: linear-gradient(180deg, var(--primary-light), var(--accent));
   border-radius: 2px;
 }
-.fav-card { overflow: hidden; }
+
+.section-count {
+  background: var(--accent-soft);
+  color: #8a5a18;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.fav-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.fav-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(20, 60, 60, 0.08);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 1px solid rgba(20, 60, 60, 0.04);
+}
+
+.fav-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 40px rgba(20, 60, 60, 0.14);
+}
+
 .fav-cover {
-  height: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #666;
+  opacity: 0;
+  transition: all 0.25s ease;
+  z-index: 3;
 }
-.fav-emoji { font-size: 48px; }
-.fav-body { padding: 12px 14px; }
-.fav-body h4 { font-size: 15px; margin: 0 0 4px; }
-.sub { color: var(--text-light); font-size: 13px; margin: 0; }
-.desc-text {
+
+.fav-card:hover .remove-btn { opacity: 1; }
+
+.remove-btn:hover {
+  background: #f5576c;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.fav-rating {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(240, 168, 48, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  z-index: 2;
+}
+
+.fav-type {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(31, 158, 143, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  z-index: 2;
+}
+
+.fav-days {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  z-index: 2;
+}
+
+.fav-body { padding: 14px 16px; }
+
+.fav-body h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.fav-body p {
+  font-size: 13px;
+  color: var(--text-light);
+  margin: 0 0 8px;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.fav-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-.view-link { color: var(--primary); font-size: 13px; font-weight: 600; }
+
+.fav-tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.fav-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
+.fav-rating-sm { color: var(--accent); font-weight: 600; }
+
+.fav-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.view-btn {
+  display: inline-block;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.view-btn:hover { color: var(--primary-dark); }
+
+@media (max-width: 768px) {
+  .fav-title { font-size: 24px; }
+  .fav-stats { gap: 8px; }
+  .stat-item { padding: 10px 16px; min-width: 65px; }
+  .stat-num { font-size: 18px; }
+  .fav-content { padding: 20px 16px; }
+}
 </style>

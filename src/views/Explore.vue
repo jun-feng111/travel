@@ -9,10 +9,9 @@
       <el-input
         v-model="keyword"
         size="large"
-        placeholder="搜索城市、景点、美食…"
+        placeholder="搜索城市、景点、美食、攻略…"
         clearable
         @keyup.enter="handleSearch"
-        @input="handleSuggest"
       >
         <template #prefix>
           <el-icon><Search /></el-icon>
@@ -21,25 +20,6 @@
           <el-button @click="handleSearch">搜索</el-button>
         </template>
       </el-input>
-
-      <div v-if="suggestions.length" class="suggestions">
-        <div
-          v-for="(s, i) in suggestions.slice(0, 8)"
-          :key="i"
-          class="suggest-item"
-          @click="selectSuggest(s)"
-        >
-          <el-icon v-if="s.type === 'city'"><LocationFilled /></el-icon>
-          <el-icon v-else><Place /></el-icon>
-          <div class="suggest-text">
-            <span class="suggest-name">{{ s.name }}</span>
-            <span class="suggest-district">{{ s.district }}</span>
-          </div>
-          <el-tag :type="s.type === 'city' ? 'success' : ''" size="small">
-            {{ s.type === 'city' ? '城市' : '地点' }}
-          </el-tag>
-        </div>
-      </div>
     </div>
 
     <div class="quick-tags">
@@ -60,17 +40,45 @@
     </div>
 
     <div v-else-if="hasSearched" class="search-results">
+      <div class="results-summary">
+        <span class="summary-text">搜索 "<strong>{{ keyword }}</strong>" 共找到</span>
+        <span class="summary-count">{{ totalResults }} 条结果</span>
+      </div>
+
       <el-tabs v-model="activeTab" class="result-tabs">
-        <el-tab-pane label="城市" name="cities">
-          <div v-if="results.cities.length" class="city-grid">
+        <el-tab-pane name="all">
+          <div class="tab-count">全部 ({{ totalResults }})</div>
+        </el-tab-pane>
+        <el-tab-pane name="cities">
+          <div class="tab-count">城市 ({{ results.cities.length }})</div>
+        </el-tab-pane>
+        <el-tab-pane name="spots">
+          <div class="tab-count">景点 ({{ results.spots.length }})</div>
+        </el-tab-pane>
+        <el-tab-pane name="foods">
+          <div class="tab-count">美食 ({{ results.foods.length }})</div>
+        </el-tab-pane>
+        <el-tab-pane name="guides">
+          <div class="tab-count">攻略 ({{ results.guides.length }})</div>
+        </el-tab-pane>
+      </el-tabs>
+
+      <template v-if="activeTab === 'all' || activeTab === 'cities'">
+        <section v-if="results.cities.length" class="result-section">
+          <h3 class="section-heading">
+            <span class="heading-dot"></span>
+            城市
+          </h3>
+          <div class="city-grid">
             <div
               v-for="city in results.cities"
               :key="city.id"
               class="city-card"
               @click="goCity(city)"
             >
-              <div class="city-cover" :style="{ background: getCityGradient(city.name) }">
-                <span class="city-emoji">{{ getCityEmoji(city.name) }}</span>
+              <div class="city-cover">
+                <ImgBox :src="getCityImg(city)" :alt="city.name" height="180px" :overlay="true" />
+                <div class="city-region">{{ city.region }}</div>
               </div>
               <div class="city-info">
                 <h3>{{ city.name }}</h3>
@@ -80,18 +88,23 @@
               <el-button type="primary" size="small" @click.stop="goCity(city)">前往</el-button>
             </div>
           </div>
-          <el-empty v-else description="未找到相关城市" />
-        </el-tab-pane>
+        </section>
+      </template>
 
-        <el-tab-pane label="景点" name="spots">
-          <div v-if="results.spots.length" class="spot-grid">
+      <template v-if="activeTab === 'all' || activeTab === 'spots'">
+        <section v-if="results.spots.length" class="result-section">
+          <h3 class="section-heading">
+            <span class="heading-dot"></span>
+            景点
+          </h3>
+          <div class="spot-grid">
             <div
               v-for="spot in results.spots"
               :key="spot.id"
               class="spot-card"
             >
-              <div class="spot-cover" :style="{ background: getSpotGradient(spot.name) }">
-                <span class="spot-emoji">{{ getSpotEmoji(spot.name) }}</span>
+              <div class="spot-cover">
+                <ImgBox :src="getSpotImg(spot)" :alt="spot.name" height="180px" :overlay="true" />
                 <el-tag v-if="spot.rating" class="rating">{{ spot.rating }}分</el-tag>
               </div>
               <div class="spot-info">
@@ -113,18 +126,25 @@
               </div>
             </div>
           </div>
-          <el-empty v-else description="未找到相关景点" />
-        </el-tab-pane>
+        </section>
+      </template>
 
-        <el-tab-pane label="美食" name="foods">
-          <div v-if="results.foods.length" class="food-grid">
+      <template v-if="activeTab === 'all' || activeTab === 'foods'">
+        <section v-if="results.foods.length" class="result-section">
+          <h3 class="section-heading">
+            <span class="heading-dot"></span>
+            美食
+          </h3>
+          <div class="food-grid">
             <div
               v-for="food in results.foods"
               :key="food.id"
               class="food-card"
+              @click="goFood(food)"
             >
-              <div class="food-cover" :style="{ background: getFoodGradient(food.name) }">
-                <span class="food-emoji">{{ getFoodEmoji(food.name) }}</span>
+              <div class="food-cover">
+                <ImgBox :src="getFoodImg(food)" :alt="food.name" height="180px" :overlay="true" />
+                <div class="food-type">{{ food.type }}</div>
               </div>
               <div class="food-info">
                 <h3>{{ food.name }}</h3>
@@ -133,19 +153,48 @@
                   <span class="label">推荐：</span>
                   <span>{{ food.recommend.join('、') }}</span>
                 </div>
+                <div class="food-meta">
+                  <span class="food-price">{{ food.priceRange }}</span>
+                  <span class="rating-sm">★ {{ food.rating }}</span>
+                </div>
               </div>
-              <el-button
-                :type="isFav('foods', food.id) ? 'warning' : 'default'"
-                size="small"
-                @click="toggleFav('foods', food.id, food)"
-              >
-                {{ isFav('foods', food.id) ? '已收藏' : '收藏' }}
-              </el-button>
             </div>
           </div>
-          <el-empty v-else description="未找到相关美食" />
-        </el-tab-pane>
-      </el-tabs>
+        </section>
+      </template>
+
+      <template v-if="activeTab === 'all' || activeTab === 'guides'">
+        <section v-if="results.guides.length" class="result-section">
+          <h3 class="section-heading">
+            <span class="heading-dot"></span>
+            攻略
+          </h3>
+          <div class="guide-grid">
+            <router-link
+              v-for="g in results.guides"
+              :key="g.id"
+              :to="`/guide/${g.id}`"
+              class="guide-card"
+            >
+              <div class="guide-cover">
+                <ImgBox :src="getGuideImg(g)" :alt="g.title" height="180px" :overlay="true" />
+                <div class="guide-days">{{ g.days }}天</div>
+              </div>
+              <div class="guide-body">
+                <h3>{{ g.title }}</h3>
+                <p>{{ g.summary }}</p>
+                <div class="guide-meta">
+                  <span>💰 ¥{{ g.budget?.min }}-{{ g.budget?.max }}</span>
+                  <span class="dot-sep">·</span>
+                  <span>{{ g.days }}天行程</span>
+                </div>
+              </div>
+            </router-link>
+          </div>
+        </section>
+      </template>
+
+      <el-empty v-if="totalResults === 0" description="没有找到相关内容，换个关键词试试" />
     </div>
 
     <div v-else class="recommend-section">
@@ -157,8 +206,8 @@
           class="recommend-card"
           @click="$router.push(`/city/${city.id}`)"
         >
-          <div class="recommend-cover" :style="{ background: getCityGradient(city.name) }">
-            <span class="recommend-emoji">{{ getCityEmoji(city.name) }}</span>
+          <div class="recommend-cover">
+            <ImgBox :src="getCityImg(city)" :alt="city.name" height="180px" :overlay="true" />
             <div class="recommend-overlay">
               <h3>{{ city.name }}</h3>
               <p>{{ city.province }}</p>
@@ -166,53 +215,70 @@
           </div>
         </div>
       </div>
+
+      <h2 style="margin-top: 40px;">📖 热门攻略</h2>
+      <div class="recommend-grid">
+        <router-link
+          v-for="g in hotGuides"
+          :key="g.id"
+          :to="`/guide/${g.id}`"
+          class="recommend-card"
+        >
+          <div class="recommend-cover">
+            <ImgBox :src="getGuideImg(g)" :alt="g.title" height="180px" :overlay="true" />
+            <div class="recommend-overlay">
+              <h3>{{ g.title }}</h3>
+              <p>{{ g.days }}天行程 · ¥{{ g.budget?.min }}起</p>
+            </div>
+          </div>
+        </router-link>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { Search, LocationFilled, Place, Loading } from '@element-plus/icons-vue'
-import { useGlobalSearch } from '../composables/useGlobalSearch'
+import { useRoute, useRouter } from 'vue-router'
+import { Search, Loading } from '@element-plus/icons-vue'
+import ImgBox from '../components/ImgBox.vue'
+import { getCityCover } from '../composables/useImageLoader'
 import { useFavorites } from '../composables/useFavorites'
-import { cities } from '../data/cities'
+import { searchAll, cityHelpers, guideHelpers, cities, guides } from '../data/index'
 
+const route = useRoute()
 const router = useRouter()
-const { suggestions, results, loading, getSuggestions, doSearch } = useGlobalSearch()
 const { isFavorite, toggleFavorite } = useFavorites()
 
-const keyword = ref('')
-const activeTab = ref('cities')
+const keyword = ref(route.query.kw || '')
+const activeTab = ref('all')
 const hasSearched = ref(false)
+const loading = ref(false)
 
 const hotTags = ['北京', '成都火锅', '西湖', '故宫', '三亚', '重庆', '上海外滩', '丽江古城']
 
-const hotCities = computed(() => cities.slice(0, 8))
+const results = ref({ cities: [], spots: [], foods: [], guides: [] })
 
-function handleSuggest() {
-  getSuggestions(keyword.value)
-}
+const hotCities = computed(() => cities.slice(0, 8))
+const hotGuides = computed(() => guides.slice(0, 6))
+
+const totalResults = computed(() => {
+  return results.value.cities.length + results.value.spots.length +
+    results.value.foods.length + results.value.guides.length
+})
 
 function handleSearch() {
-  hasSearched.value = true
-  doSearch(keyword.value)
-}
-
-function selectSuggest(s) {
-  keyword.value = s.name
-  hasSearched.value = true
-  if (s.type === 'city' && s.location) {
-    const city = cities.find(c => c.name === s.name)
-    if (city) {
-      router.push(`/city/${city.id}`)
-    } else {
-      doSearch(keyword.value)
-    }
-  } else {
-    doSearch(keyword.value)
+  const q = keyword.value.trim()
+  if (!q) {
+    hasSearched.value = false
+    return
   }
-  suggestions.value = []
+  loading.value = true
+  setTimeout(() => {
+    results.value = searchAll(q)
+    hasSearched.value = true
+    loading.value = false
+  }, 200)
 }
 
 function quickSearch(tag) {
@@ -225,10 +291,14 @@ function goCity(city) {
 }
 
 function goSpot(spot) {
-  if (spot.cityId && !spot.fromAmap) {
+  if (spot.id) {
     router.push(`/spot/${spot.id}`)
-  } else {
-    router.push(`/cities`)
+  }
+}
+
+function goFood(food) {
+  if (food.id) {
+    router.push(`/food/${food.id}`)
   }
 }
 
@@ -240,66 +310,52 @@ function toggleFav(type, id, item) {
   toggleFavorite(type, id, item)
 }
 
-const gradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-  'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-  'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-  'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-  'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-  'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)'
-]
-
-function getCityGradient(name) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return gradients[Math.abs(hash) % gradients.length]
+function getCityImg(city) {
+  if (!city) return ''
+  const result = getCityCover(city.lng, city.lat, city.cover, city.cover)
+  return result.primary
 }
 
-function getCityEmoji(name) {
-  const map = {
-    '北京': '🏯', '上海': '🌃', '广州': '🌴', '深圳': '🏙️', '成都': '🐼',
-    '杭州': '🏞️', '西安': '🏛️', '重庆': '🌉', '苏州': '🏮', '南京': '⛩️',
-    '厦门': '🏖️', '三亚': '🌊', '丽江': '🏔️', '大理': '⛰️', '昆明': '🌸',
-    '青岛': '⚓', '哈尔滨': '❄️', '张家界': '🗻', '桂林': '⛰️', '九寨沟': '🌲'
+function getSpotImg(spot) {
+  if (!spot) return ''
+  const lng = spot.lng || 116.4
+  const lat = spot.lat || 39.9
+  const result = getCityCover(lng, lat, spot.cover, spot.cover)
+  return result.primary
+}
+
+function getFoodImg(food) {
+  if (!food) return ''
+  let lng = 116.4
+  let lat = 39.9
+  if (food.cityId) {
+    const city = cityHelpers.findById(food.cityId)
+    if (city) {
+      lng = city.lng
+      lat = city.lat
+    }
   }
-  return map[name] || '📍'
+  const result = getCityCover(lng, lat, food.cover, food.cover)
+  return result.primary
 }
 
-function getSpotGradient(name) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return gradients[Math.abs(hash) % gradients.length]
+function getGuideImg(guide) {
+  if (!guide) return ''
+  let lng = 116.4
+  let lat = 39.9
+  if (guide.cityId) {
+    const city = cityHelpers.findById(guide.cityId)
+    if (city) {
+      lng = city.lng
+      lat = city.lat
+    }
+  }
+  const result = getCityCover(lng, lat, guide.cover, guide.cover)
+  return result.primary
 }
 
-function getSpotEmoji(name) {
-  if (/故宫|长城|颐和园|兵马俑|城墙/.test(name)) return '🏛️'
-  if (/西湖|漓江|洱海|滇池|五彩池/.test(name)) return '💧'
-  if (/熊猫|动物/.test(name)) return '🐼'
-  if (/山|峰|岩|洞/.test(name)) return '⛰️'
-  if (/滩|海|沙滩|亚龙湾/.test(name)) return '🏖️'
-  if (/古城|镇|街|路/.test(name)) return '🏮'
-  if (/教堂|寺|塔|庙/.test(name)) return '⛩️'
-  if (/桥|港|湾/.test(name)) return '🌉'
-  return '📍'
-}
-
-function getFoodGradient(name) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  return gradients[Math.abs(hash) % gradients.length]
-}
-
-function getFoodEmoji(name) {
-  if (/火锅|辣/.test(name)) return '🌶️'
-  if (/鸭|鸡|肉/.test(name)) return '🍗'
-  if (/鱼|虾|蟹|海鲜/.test(name)) return '🐟'
-  if (/面|粉|饺|包/.test(name)) return '🍜'
-  if (/糕|饼|糖/.test(name)) return '🍰'
-  if (/茶|咖啡/.test(name)) return '🍵'
-  if (/啤酒|酒/.test(name)) return '🍺'
-  return '🍽️'
+if (route.query.kw) {
+  handleSearch()
 }
 </script>
 
@@ -323,62 +379,11 @@ function getFoodEmoji(name) {
   -webkit-text-fill-color: transparent;
 }
 
-.subtitle {
-  color: #666;
-  margin: 0;
-}
+.subtitle { color: #666; margin: 0; }
 
 .search-box {
   max-width: 700px;
   margin: 0 auto 16px;
-  position: relative;
-}
-
-.suggestions {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-  z-index: 100;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.suggest-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.2s;
-}
-
-.suggest-item:hover {
-  background: #f5f7fa;
-}
-
-.suggest-item:last-child {
-  border-bottom: none;
-}
-
-.suggest-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.suggest-name {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.suggest-district {
-  font-size: 12px;
-  color: #999;
 }
 
 .quick-tags {
@@ -390,19 +395,9 @@ function getFoodEmoji(name) {
   margin-bottom: 32px;
 }
 
-.tag-label {
-  font-size: 14px;
-  color: #666;
-}
-
-.hot-tag {
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.hot-tag:hover {
-  transform: scale(1.05);
-}
+.tag-label { font-size: 14px; color: #666; }
+.hot-tag { cursor: pointer; transition: all 0.2s; }
+.hot-tag:hover { transform: scale(1.05); }
 
 .loading-wrap {
   text-align: center;
@@ -410,73 +405,115 @@ function getFoodEmoji(name) {
   color: #667eea;
 }
 
-.result-tabs {
-  margin-top: 16px;
+.results-summary {
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 15px;
+  color: #555;
+}
+.summary-count {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 18px;
+  margin-left: 6px;
+}
+
+.result-tabs { margin-top: 16px; }
+.tab-count { font-size: 14px; font-weight: 600; }
+
+.result-section { margin-bottom: 32px; }
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 18px;
+}
+
+.heading-dot {
+  width: 4px;
+  height: 22px;
+  background: linear-gradient(180deg, var(--primary-light), var(--primary));
+  border-radius: 2px;
 }
 
 .city-grid, .spot-grid, .food-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-  padding: 16px 0;
 }
 
-.city-card, .spot-card, .food-card {
+.city-card, .spot-card, .food-card, .guide-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 16px rgba(20, 60, 60, 0.08);
   transition: transform 0.3s, box-shadow 0.3s;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
 
-.city-card:hover, .spot-card:hover, .food-card:hover {
+.city-card:hover, .spot-card:hover, .food-card:hover, .guide-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 12px 32px rgba(20, 60, 60, 0.14);
 }
 
-.city-cover, .spot-cover, .food-cover {
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.city-cover, .spot-cover, .food-cover, .guide-cover {
   position: relative;
 }
 
-.city-emoji, .spot-emoji, .food-emoji {
-  font-size: 56px;
+.city-region {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(8px);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  z-index: 2;
 }
 
 .rating {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(255,255,255,0.9);
-  color: #f56c6c;
+  top: 10px;
+  right: 10px;
+  background: rgba(240, 168, 48, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  z-index: 2;
 }
 
-.city-info, .spot-info, .food-info {
+.city-info, .spot-info, .food-info, .guide-body {
   padding: 16px;
   flex: 1;
 }
 
-.city-info h3, .spot-info h3, .food-info h3 {
+.city-info h3, .spot-info h3, .food-info h3, .guide-body h3 {
   margin: 0 0 8px;
   font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-dark);
 }
 
-.city-info p, .spot-info p, .food-info p {
+.city-info p, .spot-info p, .food-desc {
   margin: 0;
   font-size: 13px;
   color: #666;
 }
 
-.slogan {
-  margin-top: 4px !important;
-  font-style: italic;
-  color: #999 !important;
-}
+.slogan { margin-top: 4px !important; font-style: italic; color: #999 !important; }
 
 .spot-intro {
   display: -webkit-box;
@@ -485,12 +522,7 @@ function getFoodEmoji(name) {
   overflow: hidden;
 }
 
-.spot-tags {
-  display: flex;
-  gap: 4px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
+.spot-tags { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
 
 .spot-actions {
   display: flex;
@@ -498,32 +530,68 @@ function getFoodEmoji(name) {
   padding: 0 16px 16px;
 }
 
+.food-type {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(31, 158, 143, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  z-index: 2;
+}
+
 .food-desc {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.food-recommend {
-  margin-top: 8px;
+.food-recommend { margin-top: 8px; font-size: 12px; color: #666; }
+.food-recommend .label { color: #999; }
+
+.food-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-top: 10px;
+}
+.food-price { color: var(--accent); font-weight: 600; }
+.rating-sm { color: var(--accent); font-weight: 600; }
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.guide-days {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255,255,255,0.9);
+  color: var(--primary-dark);
   font-size: 12px;
-  color: #666;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 12px;
+  z-index: 2;
 }
 
-.food-recommend .label {
-  color: #999;
+.guide-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 8px;
 }
+.dot-sep { opacity: 0.5; }
 
-.recommend-section {
-  margin-top: 40px;
-}
-
-.recommend-section h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #333;
-}
+.recommend-section { margin-top: 40px; }
 
 .recommend-grid {
   display: grid;
@@ -532,28 +600,19 @@ function getFoodEmoji(name) {
 }
 
 .recommend-card {
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.3s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  box-shadow: 0 4px 16px rgba(20, 60, 60, 0.08);
 }
 
-.recommend-card:hover {
-  transform: scale(1.03);
-}
+.recommend-card:hover { transform: scale(1.03); }
 
-.recommend-cover {
-  height: 160px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.recommend-emoji {
-  font-size: 48px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
+.recommend-cover { position: relative; }
 
 .recommend-overlay {
   position: absolute;
@@ -564,15 +623,6 @@ function getFoodEmoji(name) {
   background: linear-gradient(transparent, rgba(0,0,0,0.7));
   color: white;
 }
-
-.recommend-overlay h3 {
-  margin: 0 0 4px;
-  font-size: 18px;
-}
-
-.recommend-overlay p {
-  margin: 0;
-  font-size: 12px;
-  opacity: 0.8;
-}
+.recommend-overlay h3 { margin: 0 0 4px; font-size: 18px; }
+.recommend-overlay p { margin: 0; font-size: 12px; opacity: 0.8; }
 </style>

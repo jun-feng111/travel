@@ -1,160 +1,244 @@
 <template>
-  <div v-if="city">
-    <!-- 头部：使用城市封面图作为背景 -->
-    <div class="city-hero">
-      <ImgBox :src="city.cover" :alt="city.name" height="360px" overlay class="hero-bg" />
-      <div class="container hero-inner">
-        <span class="region-chip">{{ city.region }} · {{ city.province }}</span>
-        <h1>{{ city.name }}</h1>
-        <p class="slogan">{{ city.slogan }}</p>
-        <p class="intro">{{ city.intro }}</p>
-        <div class="quick">
-          <router-link :to="`/search?q=${city.name}`" class="quick-btn">查看相关搜索 →</router-link>
-          <button class="quick-btn fav-btn" @click="toggleCityFav">
-            <el-icon v-if="cityFaved"><StarFilled /></el-icon><el-icon v-else><Star /></el-icon>
-            {{ cityFaved ? '已收藏' : '收藏' }}
-          </button>
-          <router-link :to="`/planner?city=${city.id}`" class="quick-btn">智能规划行程 →</router-link>
+  <div v-if="city" class="city-detail">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-bg">
+        <ImgBox :src="heroCoverUrl" :alt="city.name" height="480px" overlay class="hero-img" />
+      </div>
+      <div class="hero-overlay"></div>
+      <div class="container hero-content">
+        <div class="hero-top">
+          <span class="region-tag">{{ city.region }} · {{ city.province }}</span>
+          <div class="hero-actions">
+            <router-link :to="`/planner?city=${city.id}`" class="action-btn">
+              <el-icon><Calendar /></el-icon> 规划行程
+            </router-link>
+            <button
+              class="action-btn fav"
+              @click="toggleCityFav"
+            >
+              <el-icon v-if="cityFaved"><StarFilled /></el-icon>
+              <el-icon v-else><Star /></el-icon>
+              {{ cityFaved ? '已收藏' : '收藏城市' }}
+            </button>
+          </div>
+        </div>
+        <h1 class="hero-title">{{ city.name }}</h1>
+        <p class="hero-slogan">「{{ city.slogan }}」</p>
+        <p class="hero-intro">{{ city.intro }}</p>
+      </div>
+    </div>
+
+    <!-- Quick Info Bar -->
+    <div class="container">
+      <div class="quick-bar">
+        <div class="quick-item">
+          <div class="qi-icon season">
+            <el-icon><Sunny /></el-icon>
+          </div>
+          <div class="qi-body">
+            <span class="qi-label">最佳季节</span>
+            <span class="qi-value">{{ city.bestSeason }}</span>
+          </div>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon weather">
+            <el-icon><Cloudy /></el-icon>
+          </div>
+          <div class="qi-body">
+            <span class="qi-label">气候特征</span>
+            <span class="qi-value">{{ city.weather }}</span>
+          </div>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon coord">
+            <el-icon><Location /></el-icon>
+          </div>
+          <div class="qi-body">
+            <span class="qi-label">地理坐标</span>
+            <span class="qi-value">{{ city.lng.toFixed(3) }}°E, {{ city.lat.toFixed(3) }}°N</span>
+          </div>
+        </div>
+        <div class="quick-item">
+          <div class="qi-icon rating">
+            <el-icon><StarFilled /></el-icon>
+          </div>
+          <div class="qi-body">
+            <span class="qi-label">综合评分</span>
+            <span class="qi-value">{{ avgRating }} / 5.0</span>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Tab Navigation -->
     <div class="container">
-      <div class="season-bar" v-if="city.bestSeason">
-        <span class="season-item"><el-icon><Sunny /></el-icon> 最佳季节：<strong>{{ city.bestSeason }}</strong></span>
-        <span class="season-item weather"><el-icon><Cloudy /></el-icon> {{ city.weather }}</span>
-        <router-link :to="`/map/${city.id}`" class="map-link"><el-icon><MapLocation /></el-icon> 查看地图</router-link>
+      <div class="tab-nav">
+        <button
+          v-for="t in tabs"
+          :key="t.name"
+          class="tab-btn"
+          :class="{ active: tab === t.name }"
+          @click="tab = t.name"
+        >
+          <el-icon><component :is="t.icon" /></el-icon>
+          <span>{{ t.label }}</span>
+          <span v-if="t.count" class="tab-count">{{ t.count }}</span>
+        </button>
       </div>
 
-      <el-tabs v-model="tab" class="city-tabs">
-        <!-- 热门景点 -->
-        <el-tab-pane label="热门景点" name="spots">
-          <div class="grid grid-cols-3">
-            <router-link v-for="s in spots" :key="s.id" :to="`/spot/${s.id}`" class="card spot-card">
-              <ImgBox :src="s.cover" :alt="s.name" height="170px" />
-              <div class="spot-body">
-                <div class="spot-main">
-                  <h4>{{ s.name }}</h4>
-                  <div class="tags">
-                    <span v-for="t in s.tags" :key="t" class="mini-tag">{{ t }}</span>
-                  </div>
-                </div>
-                <div class="spot-right">
-                  <span class="rating">★ {{ s.rating }}</span>
-                  <el-button text :icon="s.faved ? StarFilled : Star" @click.prevent="toggleSpotFav(s)" class="fav-btn-mini">
-                    {{ s.faved ? '已藏' : '收藏' }}
-                  </el-button>
-                </div>
+      <!-- 景点 Tab -->
+      <div v-show="tab === 'spots'" class="tab-content">
+        <div v-if="spots.length" class="spot-grid">
+          <div v-for="s in spots" :key="s.id" class="spot-card" @click="goSpot(s.id)">
+            <div class="spot-cover">
+              <ImgBox :src="getSpotCoverUrl(s)" :alt="s.name" height="200px" />
+              <div class="spot-rating">
+                <el-icon><StarFilled /></el-icon>
+                <span>{{ s.rating }}</span>
               </div>
-            </router-link>
-          </div>
-        </el-tab-pane>
-
-        <!-- 旅游攻略 -->
-        <el-tab-pane label="旅游攻略" name="guides">
-          <div class="grid grid-cols-2">
-            <router-link v-for="g in guides" :key="g.id" :to="`/guide/${g.id}`" class="card guide-card">
-              <ImgBox :src="g.cover" :alt="g.title" height="180px" />
-              <div class="guide-body">
-                <span class="tag">{{ g.cityName }}</span>
-                <h3>{{ g.title }}</h3>
-                <p>{{ g.summary }}</p>
-                <span class="date"><el-icon><Calendar /></el-icon> {{ g.date }}</span>
+              <button
+                class="spot-fav"
+                @click.stop="toggleSpotFav(s)"
+                :class="{ active: s.faved }"
+              >
+                <el-icon v-if="s.faved"><StarFilled /></el-icon>
+                <el-icon v-else><Star /></el-icon>
+              </button>
+            </div>
+            <div class="spot-info">
+              <h3 class="spot-name">{{ s.name }}</h3>
+              <div class="spot-tags">
+                <span v-for="t in s.tags.slice(0, 3)" :key="t" class="spot-tag">{{ t }}</span>
               </div>
-            </router-link>
-          </div>
-          <el-empty v-if="!guides.length" description="暂无攻略，敬请期待" />
-        </el-tab-pane>
-
-        <!-- 美景 -->
-        <el-tab-pane label="美景" name="gallery">
-          <div class="grid grid-cols-3">
-            <div v-for="g in galleries" :key="g.id" class="card gallery-card">
-              <ImgBox :src="g.image" :alt="g.title" height="210px" />
-              <div class="gallery-body">
-                <h4>{{ g.title }}</h4>
-                <p>{{ g.desc }}</p>
-              </div>
+              <p class="spot-desc">{{ s.intro }}</p>
             </div>
           </div>
-          <el-empty v-if="!galleries.length" description="暂无图集" />
-        </el-tab-pane>
+        </div>
+        <el-empty v-else description="暂无景点数据" />
+      </div>
 
-        <!-- 美食 -->
-        <el-tab-pane label="美食" name="foods">
-          <div class="grid grid-cols-3">
-            <div v-for="f in foods" :key="f.id" class="card food-card">
-              <ImgBox :src="f.cover" :alt="f.name" height="170px" />
-              <div class="food-body">
-                <h4>{{ f.name }}</h4>
-                <p>{{ f.desc }}</p>
-                <div class="rec"><el-icon><Shop /></el-icon> 推荐店铺：{{ f.recommend.join('、') }}</div>
-                <el-button text :icon="f.faved ? StarFilled : Star" @click="toggleFoodFav(f)" class="food-fav">
+      <!-- 美食 Tab -->
+      <div v-show="tab === 'foods'" class="tab-content">
+        <div v-if="foods.length" class="food-grid">
+          <div v-for="f in foods" :key="f.id" class="food-card">
+            <div class="food-cover">
+              <ImgBox :src="getFoodCoverUrl(f)" :alt="f.name" height="180px" />
+              <div class="food-type">{{ f.type }}</div>
+              <div class="food-rating">
+                <el-icon><StarFilled /></el-icon>
+                <span>{{ f.rating }}</span>
+              </div>
+            </div>
+            <div class="food-info">
+              <h3 class="food-name">{{ f.name }}</h3>
+              <p class="food-desc">{{ f.desc }}</p>
+              <div class="food-rec">
+                <el-icon><Shop /></el-icon>
+                <span>{{ f.recommend.join('、') }}</span>
+              </div>
+              <div class="food-bottom">
+                <span class="food-price">{{ f.priceRange }}</span>
+                <button
+                  class="food-fav"
+                  @click="toggleFoodFav(f)"
+                  :class="{ active: f.faved }"
+                >
+                  <el-icon v-if="f.faved"><StarFilled /></el-icon>
+                  <el-icon v-else><Star /></el-icon>
                   {{ f.faved ? '已收藏' : '收藏' }}
-                </el-button>
+                </button>
               </div>
             </div>
           </div>
-          <el-empty v-if="!foods.length" description="暂无美食数据" />
-        </el-tab-pane>
+        </div>
+        <el-empty v-else description="暂无美食数据" />
+      </div>
 
-        <!-- 地图 -->
-        <el-tab-pane label="地图" name="map">
-          <p class="tab-desc">点击标记查看景点信息，坐标为示意位置。</p>
-          <div id="cityMap" class="map-box"></div>
-        </el-tab-pane>
-
-        <!-- 季节 -->
-        <el-tab-pane label="季节" name="season">
-          <div class="season-grid">
-            <div class="card season-best">
-              <div class="season-icon"><el-icon><Sunny /></el-icon></div>
-              <div class="season-label">最佳旅行季节</div>
-              <div class="season-val">{{ city.bestSeason }}</div>
+      <!-- 攻略 Tab -->
+      <div v-show="tab === 'guides'" class="tab-content">
+        <div v-if="guides.length" class="guide-list">
+          <div v-for="g in guides" :key="g.id" class="guide-card" @click="goGuide(g.id)">
+            <div class="guide-cover">
+              <ImgBox :src="getGuideCoverUrl(g)" :alt="g.title" height="160px" />
+              <div class="guide-days">{{ g.days }}天</div>
             </div>
-            <div class="card season-weather">
-              <div class="season-icon"><Cloudy /></div>
-              <div class="season-label">气候特征</div>
-              <div class="season-val-sm">{{ city.weather }}</div>
-            </div>
-            <div class="card season-now" v-if="weather.now">
-              <div class="season-icon" style="color:#667eea">{{ getWeatherEmoji(weather.now.text) }}</div>
-              <div class="season-label">当前天气</div>
-              <div class="season-val-sm">{{ weather.now.text }} {{ weather.now.temp }}°C</div>
-              <div class="season-val-sm" style="font-size:12px;margin-top:4px">
-                💨 {{ weather.now.windDir }} {{ weather.now.windScale }}级 · 💧 {{ weather.now.humidity }}%
-              </div>
-            </div>
-            <div class="card season-7d" v-if="weather.daily.length">
-              <div class="season-icon" style="color:#43e97b">📅</div>
-              <div class="season-label">未来7天</div>
-              <div class="daily-row">
-                <div v-for="(d, i) in weather.daily.slice(0,7)" :key="i" class="daily-item">
-                  <div class="daily-date">{{ d.date.slice(5) }}</div>
-                  <div class="daily-icon">{{ getWeatherEmoji(d.textDay) }}</div>
-                  <div class="daily-temp">{{ d.tempMin }}~{{ d.tempMax }}°</div>
-                </div>
+            <div class="guide-info">
+              <h3 class="guide-title">{{ g.title }}</h3>
+              <p class="guide-summary">{{ g.summary }}</p>
+              <div class="guide-meta">
+                <span class="guide-budget">💰 {{ g.budget.min }}-{{ g.budget.max }} 元</span>
+                <span class="guide-season">🗓 {{ g.bestSeason || '四季适宜' }}</span>
               </div>
             </div>
           </div>
+        </div>
+        <el-empty v-else description="暂无攻略，敬请期待" />
+      </div>
 
-          <h3 class="sub-title">月度旅行指数</h3>
+      <!-- 天气 Tab -->
+      <div v-show="tab === 'weather'" class="tab-content">
+        <div class="weather-section">
+          <div v-if="weather.now" class="weather-now-card">
+            <div class="wn-left">
+              <span class="wn-icon">{{ getWeatherEmoji(weather.now.text) }}</span>
+              <span class="wn-temp">{{ weather.now.temp }}°</span>
+            </div>
+            <div class="wn-right">
+              <h3>{{ weather.now.text }}</h3>
+              <p>💨 {{ weather.now.windDir }} {{ weather.now.windScale }}级</p>
+              <p>💧 湿度 {{ weather.now.humidity }}%</p>
+            </div>
+          </div>
+          <div v-else class="weather-loading">正在加载天气信息...</div>
+
+          <h3 class="weather-title">7日天气预报</h3>
+          <div v-if="weather.daily.length" class="forecast-grid">
+            <div v-for="(d, i) in weather.daily.slice(0, 7)" :key="i" class="forecast-day">
+              <span class="fd-date">{{ d.date.slice(5) }}</span>
+              <span class="fd-icon">{{ getWeatherEmoji(d.textDay) }}</span>
+              <span class="fd-temp">{{ d.tempMin }}°~{{ d.tempMax }}°</span>
+              <span class="fd-text">{{ d.textDay }}</span>
+            </div>
+          </div>
+
+          <h3 class="weather-title">月度旅行指数</h3>
           <div class="month-grid">
-            <div v-for="(m, i) in months" :key="i" class="month-cell" :class="m.level">
+            <div
+              v-for="(m, i) in months"
+              :key="i"
+              class="month-cell"
+              :class="m.level"
+            >
               <span class="month-no">{{ i + 1 }}月</span>
               <span class="month-tag">{{ m.label }}</span>
             </div>
           </div>
 
-          <h3 class="sub-title">出行建议</h3>
+          <h3 class="weather-title">出行建议</h3>
           <div class="tips-list">
             <div v-for="t in seasonTips" :key="t" class="tip-item">
               <el-icon><CircleCheckFilled /></el-icon>
               <span>{{ t }}</span>
             </div>
           </div>
-        </el-tab-pane>
-      </el-tabs>
+        </div>
+      </div>
+
+      <!-- 地图 Tab -->
+      <div v-show="tab === 'map'" class="tab-content">
+        <div class="map-section">
+          <p class="map-desc">点击地图标记查看景点详细位置</p>
+          <div id="cityMap" class="map-box"></div>
+          <div class="spot-markers">
+            <div v-for="s in spots" :key="s.id" class="marker-item" @click="focusMarker(s)">
+              <el-icon><LocationFilled /></el-icon>
+              <span>{{ s.name }}</span>
+              <span class="marker-rating">★ {{ s.rating }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -163,73 +247,131 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { Star, StarFilled, Sunny, Cloudy, MapLocation, Calendar, Shop, CircleCheckFilled } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
+import {
+  Star, StarFilled, Sunny, Cloudy, Location, Calendar,
+  Shop, CircleCheckFilled, LocationFilled,
+  View, Food, Reading, DataAnalysis, MapLocation
+} from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
 import { getCity } from '../data/cities'
 import { spotsByCity } from '../data/spots'
 import { guidesByCity } from '../data/guides'
-import { galleriesByCity } from '../data/galleries'
 import { foodsByCity } from '../data/foods'
 import { useFavorites } from '../composables/useFavorites'
 import { useWeather } from '../composables/useWeather'
+import { getCityCover } from '../composables/useImageLoader'
 
 const route = useRoute()
-const cityId = route.params.cityId
-const city = getCity(cityId)
+const router = useRouter()
 const tab = ref('spots')
 const { isFavorite, toggleFavorite } = useFavorites()
 const { now, daily, fetchWeather } = useWeather()
 
+const city = computed(() => getCity(route.params.cityId))
+
 const weather = computed(() => ({ now: now.value, daily: daily.value }))
 
-onMounted(() => {
-  if (city) {
-    fetchWeather(city.name)
-  }
+const heroCoverUrl = computed(() => {
+  if (!city.value) return ''
+  const cover = getCityCover(city.value.lng, city.value.lat, city.value.name)
+  return cover.primary
 })
 
-const spots = computed(() => spotsByCity(cityId).map(s => ({ ...s, faved: isFavorite('spots', s.id) })))
-const guides = computed(() => guidesByCity(cityId))
-const galleries = computed(() => galleriesByCity(cityId))
-const foods = computed(() => foodsByCity(cityId).map(f => ({ ...f, faved: isFavorite('foods', f.id) })))
+onMounted(() => {
+  if (city.value) fetchWeather(city.value.name)
+})
 
-const cityFaved = ref(isFavorite('cities', cityId))
+watch(() => route.params.cityId, (newId) => {
+  if (newId) fetchWeather(getCity(newId)?.name)
+})
+
+const tabs = computed(() => [
+  { name: 'spots', label: '景点', icon: View, count: spots.value.length },
+  { name: 'foods', label: '美食', icon: Food, count: foods.value.length },
+  { name: 'guides', label: '攻略', icon: Reading, count: guides.value.length },
+  { name: 'weather', label: '天气', icon: DataAnalysis },
+  { name: 'map', label: '地图', icon: MapLocation }
+])
+
+const spots = computed(() => {
+  if (!city.value) return []
+  return spotsByCity(city.value.id).map(s => ({
+    ...s,
+    faved: isFavorite('spots', s.id)
+  }))
+})
+
+const guides = computed(() => {
+  if (!city.value) return []
+  return guidesByCity(city.value.id)
+})
+
+const foods = computed(() => {
+  if (!city.value) return []
+  return foodsByCity(city.value.id).map(f => ({
+    ...f,
+    faved: isFavorite('foods', f.id)
+  }))
+})
+
+const avgRating = computed(() => {
+  if (!spots.value.length) return '4.50'
+  const sum = spots.value.reduce((a, s) => a + (s.rating || 0), 0)
+  return (sum / spots.value.length).toFixed(2)
+})
+
+const cityFaved = ref(false)
+watch(city, (c) => {
+  cityFaved.value = c ? isFavorite('cities', c.id) : false
+}, { immediate: true })
+
 function toggleCityFav() {
-  toggleFavorite('cities', cityId, {
-    id: cityId,
-    name: city.name,
-    province: city.province,
-    region: city.region,
-    slogan: city.slogan,
-    intro: city.intro
+  if (!city.value) return
+  toggleFavorite('cities', city.value.id, {
+    id: city.value.id, name: city.value.name, province: city.value.province,
+    region: city.value.region, slogan: city.value.slogan, intro: city.value.intro
   })
-  cityFaved.value = isFavorite('cities', cityId)
+  cityFaved.value = isFavorite('cities', city.value.id)
 }
+
 function toggleSpotFav(s) {
   toggleFavorite('spots', s.id, {
-    id: s.id,
-    name: s.name,
-    cover: s.cover,
-    rating: s.rating,
-    tags: s.tags,
-    cityId: cityId,
-    cityName: city?.name,
-    intro: s.intro
+    id: s.id, name: s.name, cover: s.cover,
+    rating: s.rating, tags: s.tags, cityId: city.value?.id,
+    cityName: city.value?.name, intro: s.intro
   })
   s.faved = isFavorite('spots', s.id)
 }
+
 function toggleFoodFav(f) {
   toggleFavorite('foods', f.id, {
-    id: f.id,
-    name: f.name,
-    cover: f.cover,
-    desc: f.desc,
-    recommend: f.recommend,
-    cityId: cityId,
-    cityName: city?.name
+    id: f.id, name: f.name, cover: f.cover,
+    desc: f.desc, recommend: f.recommend,
+    cityId: city.value?.id, cityName: city.value?.name
   })
   f.faved = isFavorite('foods', f.id)
+}
+
+function goSpot(id) { router.push(`/spot/${id}`) }
+function goGuide(id) { router.push(`/guide/${id}`) }
+
+function getSpotCoverUrl(s) {
+  if (!city.value) return ''
+  const cover = getCityCover(city.value.lng, city.value.lat, s.name)
+  return cover.primary
+}
+
+function getFoodCoverUrl(f) {
+  if (!city.value) return ''
+  const cover = getCityCover(city.value.lng, city.value.lat, f.name)
+  return cover.primary
+}
+
+function getGuideCoverUrl(g) {
+  if (!city.value) return ''
+  const cover = getCityCover(city.value.lng, city.value.lat, g.title)
+  return cover.primary
 }
 
 function getWeatherEmoji(text) {
@@ -242,21 +384,17 @@ function getWeatherEmoji(text) {
   return '🌤️'
 }
 
-// ===== 月度旅行指数：解析 bestSeason 生成 12 月数据 =====
 function parseMonths(seasonStr) {
   const best = new Set()
-  // 匹配 "3-6月、9-11月" 这种格式
   const re = /(\d+)\s*-\s*(\d+)\s*月/g
   let match
   while ((match = re.exec(seasonStr)) !== null) {
     const a = +match[1], b = +match[2]
     for (let i = a; i <= b; i++) best.add(i)
   }
-  // 匹配单独的 "3月"
   const re2 = /(\d+)\s*月/g
   let m2
   while ((m2 = re2.exec(seasonStr)) !== null) best.add(+m2[1])
-
   const months = []
   for (let i = 1; i <= 12; i++) {
     if (best.has(i)) months.push({ level: 'best', label: '推荐' })
@@ -265,13 +403,13 @@ function parseMonths(seasonStr) {
   }
   return months
 }
-const months = computed(() => city ? parseMonths(city.bestSeason) : [])
 
-// ===== 出行建议 =====
+const months = computed(() => city.value ? parseMonths(city.value.bestSeason) : [])
+
 const seasonTips = computed(() => {
-  if (!city) return []
+  if (!city.value) return []
   const tips = []
-  const w = city.weather || ''
+  const w = city.value.weather || ''
   if (/高原|紫外线/.test(w)) tips.push('高原地区紫外线强，务必做好防晒，携带墨镜和防晒霜')
   if (/温差/.test(w)) tips.push('昼夜温差大，建议携带外套，采用洋葱式穿搭')
   if (/台风/.test(w)) tips.push('夏季可能受台风影响，出行前关注天气预报，避免台风期间前往')
@@ -283,11 +421,10 @@ const seasonTips = computed(() => {
   return tips
 })
 
-// ===== 内联地图 =====
 let map = null
 let mapInited = false
 async function initMap() {
-  if (!city || mapInited) return
+  if (!city.value || mapInited) return
   mapInited = true
   if (!window.L) {
     const css = document.createElement('link')
@@ -305,8 +442,8 @@ async function initMap() {
   await nextTick()
   const el = document.getElementById('cityMap')
   if (!el || !window.L) return
-  const spotsList = spotsByCity(cityId)
-  const center = [city.lat, city.lng]
+  const spotsList = spotsByCity(city.value.id)
+  const center = [city.value.lat, city.value.lng]
   map = window.L.map('cityMap').setView(center, 12)
   window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
@@ -315,9 +452,9 @@ async function initMap() {
     const marker = window.L.marker([s.lat, s.lng]).addTo(map)
     const html = `
       <div style="width:200px">
-        <div style="height:80px;background:linear-gradient(135deg,#a8dadc,#4a9d9c);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600">${s.name}</div>
+        <div style="height:80px;background:linear-gradient(135deg,#4fd1c5,#1f9e8f);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600">${s.name}</div>
         <h4 style="margin:6px 0 2px">${s.name}</h4>
-        <div style="color:#f5a623;font-size:13px">★ ${s.rating}</div>
+        <div style="color:#f0a830;font-size:13px">★ ${s.rating}</div>
         <p style="font-size:12px;color:#666;margin:4px 0">${s.intro}</p>
         <a href="#/spot/${s.id}" style="color:#1f9e8f;font-size:13px;font-weight:600">查看详情 →</a>
       </div>`
@@ -326,127 +463,673 @@ async function initMap() {
   setTimeout(() => map && map.invalidateSize(), 200)
 }
 
+function focusMarker(s) {
+  if (!map) return
+  map.setView([s.lat, s.lng], 15)
+  const marker = map._layers
+    ? Object.values(map._layers).find(m => m.getLatLng && Math.abs(m.getLatLng().lat - s.lat) < 0.001)
+    : null
+  if (marker) marker.openPopup()
+}
+
 watch(tab, (v) => {
   if (v === 'map') nextTick(() => initMap())
 })
 </script>
 
 <style scoped>
-.city-hero { position: relative; color: #fff; overflow: hidden; }
+.city-detail { min-height: 100vh; background: #f7fafc; }
+
+/* ===== Hero Section ===== */
+.hero-section {
+  position: relative;
+  height: 480px;
+  overflow: hidden;
+}
 .hero-bg { position: absolute; inset: 0; }
-.hero-bg :deep(.imgbox-img) { filter: brightness(0.55); }
-.hero-inner { position: relative; z-index: 2; padding: 56px 24px 40px; }
-.region-chip {
-  display: inline-block; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px);
-  padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; margin-bottom: 12px;
-  border: 1px solid rgba(255,255,255,0.25);
+.hero-bg .hero-img :deep(.imgbox-img) {
+  filter: brightness(0.45) saturate(1.1);
+  transform: scale(1.05);
 }
-.hero-inner h1 { font-size: 42px; font-weight: 800; text-shadow: 0 2px 12px rgba(0,0,0,0.4); letter-spacing: 1px; }
-.slogan { font-size: 19px; margin: 8px 0; opacity: 0.95; font-weight: 500; text-shadow: 0 1px 6px rgba(0,0,0,0.3); }
-.intro { max-width: 720px; opacity: 0.9; line-height: 1.7; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-.quick { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
-.quick-btn {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: rgba(255,255,255,0.18); backdrop-filter: blur(10px);
-  padding: 9px 20px; border-radius: 24px; font-weight: 600; color: #fff;
-  border: 1px solid rgba(255,255,255,0.3); cursor: pointer; transition: all 0.25s ease;
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(15,35,45,0.3) 0%, rgba(15,35,45,0.65) 100%);
+  z-index: 1;
 }
-.quick-btn:hover { background: rgba(255,255,255,0.32); transform: translateY(-2px); }
-
-.season-bar { display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
-  background: #fff; border-radius: 14px; padding: 16px 20px; margin: -20px 24px 0; position: relative; z-index: 3;
-  box-shadow: 0 8px 24px rgba(20,60,60,0.10); font-size: 14px; }
-.season-item { display: flex; align-items: center; gap: 6px; }
-.season-item strong { color: var(--primary-dark); }
-.season-item.weather { color: var(--text-light); }
-.map-link { margin-left: auto; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 4px; }
-
-.city-tabs { margin-top: 22px; }
-:deep(.el-tabs__nav-wrap::after) { height: 1px; background: rgba(20,60,60,0.08); }
-:deep(.el-tabs__item) { font-size: 15px; font-weight: 500; }
-:deep(.el-tabs__active-bar) { background: linear-gradient(90deg, var(--primary-light), var(--primary)); height: 3px; border-radius: 2px; }
-
-.spot-body { padding: 12px 14px; display: flex; justify-content: space-between; gap: 8px; }
-.spot-main h4 { font-size: 15px; margin-bottom: 6px; }
-.tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.mini-tag { background: #eef5f5; color: var(--primary-dark); font-size: 11px; padding: 2px 9px; border-radius: 8px; }
-.rating { color: var(--accent); font-weight: 600; font-size: 13px; white-space: nowrap; }
-.spot-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.fav-btn-mini { padding: 2px 4px; font-size: 12px; }
-
-.guide-body { padding: 14px 16px; }
-.guide-body h3 { font-size: 16px; margin: 8px 0; }
-.guide-body p { color: var(--text-light); font-size: 13px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.tag { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; font-size: 12px; padding: 3px 12px; border-radius: 10px; }
-.date { color: var(--text-faint); font-size: 12px; display: flex; align-items: center; gap: 4px; }
-
-.gallery-body { padding: 12px 14px; }
-.gallery-body h4 { font-size: 15px; }
-.gallery-body p { color: var(--text-light); font-size: 13px; margin-top: 4px; }
-
-.food-body { padding: 12px 14px; }
-.food-body h4 { font-size: 16px; }
-.food-body p { color: var(--text-light); font-size: 13px; margin: 6px 0; }
-.rec { color: var(--primary-dark); font-size: 12px; display: flex; align-items: center; gap: 4px; }
-.food-fav { padding-left: 0; color: var(--primary); }
-
-.tab-desc { color: var(--text-light); margin-bottom: 14px; font-size: 14px; }
-.map-box { height: 480px; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); }
-
-/* 季节 Tab */
-.season-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
-.season-best, .season-weather, .season-now, .season-7d { padding: 24px; }
-.season-now {
-  background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-}
-.season-7d {
-  background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
-}
-.daily-row {
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding-top: 60px;
+  padding-bottom: 40px;
+  height: 100%;
   display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  margin-top: 8px;
+  flex-direction: column;
+  justify-content: center;
+  color: #fff;
 }
-.daily-item {
+.hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.region-tag {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid rgba(255,255,255,0.25);
+  letter-spacing: 1px;
+}
+.hero-actions {
+  display: flex;
+  gap: 10px;
+}
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+.action-btn:hover {
+  background: rgba(255,255,255,0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+.action-btn.fav.active,
+.action-btn.fav:active {
+  background: linear-gradient(135deg, #f0a830, #e6941f);
+  border-color: transparent;
+}
+.hero-title {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  margin-bottom: 8px;
+}
+.hero-slogan {
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  opacity: 0.95;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  letter-spacing: 1px;
+}
+.hero-intro {
+  max-width: 700px;
+  font-size: 15px;
+  line-height: 1.8;
+  opacity: 0.88;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+}
+
+/* ===== Quick Bar ===== */
+.quick-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  background: #fff;
+  margin: -30px 24px 0;
+  position: relative;
+  z-index: 10;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(20,60,60,0.12);
+  overflow: hidden;
+}
+.quick-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  border-right: 1px solid rgba(20,60,60,0.06);
+  transition: background 0.3s;
+}
+.quick-item:last-child { border-right: none; }
+.quick-item:hover { background: rgba(31,158,143,0.04); }
+.qi-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
   flex-shrink: 0;
-  text-align: center;
-  padding: 8px;
-  background: rgba(255,255,255,0.7);
-  border-radius: 8px;
-  min-width: 50px;
 }
-.daily-date { font-size: 11px; color: #666; }
-.daily-icon { font-size: 20px; }
-.daily-temp { font-size: 11px; color: #667eea; font-weight: 600; }
-.season-best, .season-weather { padding: 24px; }
-.season-icon { font-size: 32px; color: var(--accent); margin-bottom: 10px; }
-.season-label { font-size: 13px; color: var(--text-light); margin-bottom: 6px; }
-.season-val { font-size: 20px; font-weight: 700; color: var(--primary-dark); }
-.season-val-sm { font-size: 14px; color: var(--text); line-height: 1.6; }
+.qi-icon.season { background: linear-gradient(135deg, #f0a830, #e6941f); }
+.qi-icon.weather { background: linear-gradient(135deg, #4fd1c5, #1f9e8f); }
+.qi-icon.coord { background: linear-gradient(135deg, #667eea, #5a67d8); }
+.qi-icon.rating { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.qi-body { display: flex; flex-direction: column; min-width: 0; }
+.qi-label { font-size: 12px; color: #718096; margin-bottom: 2px; }
+.qi-value { font-size: 15px; font-weight: 600; color: #1a365d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.sub-title { font-size: 18px; font-weight: 700; color: var(--primary-dark); margin: 24px 0 14px;
-  display: flex; align-items: center; gap: 8px; }
-.sub-title::before { content: ''; width: 4px; height: 18px; background: var(--primary); border-radius: 2px; }
+/* ===== Tab Nav ===== */
+.tab-nav {
+  display: flex;
+  gap: 4px;
+  margin: 32px 0 28px;
+  background: #fff;
+  padding: 6px;
+  border-radius: 16px;
+  box-shadow: 0 6px 24px rgba(20,60,60,0.08);
+  overflow-x: auto;
+}
+.tab-btn {
+  flex: 1;
+  min-width: 100px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border: none;
+  background: transparent;
+  color: #718096;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: #2c5364; background: rgba(31,158,143,0.06); }
+.tab-btn.active {
+  background: linear-gradient(135deg, #4fd1c5, #1f9e8f);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(31,158,143,0.35);
+}
+.tab-count {
+  background: rgba(255,255,255,0.25);
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.tab-btn:not(.active) .tab-count {
+  background: #f7fafc;
+  color: #2c5364;
+}
 
-.month-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
-.month-cell { text-align: center; padding: 14px 8px; border-radius: 12px; font-size: 13px; }
-.month-cell .month-no { display: block; font-weight: 700; margin-bottom: 4px; }
-.month-cell .month-tag { font-size: 11px; }
-.month-cell.best { background: linear-gradient(135deg, #e8f7f1, #d1f0e3); color: var(--primary-dark); }
-.month-cell.good { background: #fff8ec; color: #b8861a; }
-.month-cell.normal { background: var(--bg-soft); color: var(--text-faint); }
+/* ===== Tab Content ===== */
+.tab-content { min-height: 300px; padding-bottom: 40px; }
 
-.tips-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.tip-item { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px; background: #fff; border-radius: 10px; box-shadow: var(--shadow-sm); font-size: 14px; color: var(--text); }
-.tip-item .el-icon { color: var(--primary); flex-shrink: 0; margin-top: 2px; }
+/* ===== Spot Cards ===== */
+.spot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.spot-card {
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(20,60,60,0.08);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.4s ease;
+  border: 1px solid rgba(20,60,60,0.04);
+}
+.spot-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 48px rgba(20,60,60,0.14);
+}
+.spot-cover { position: relative; overflow: hidden; }
+.spot-cover :deep(.imgbox-img) { transition: transform 0.6s ease; }
+.spot-card:hover .spot-cover :deep(.imgbox-img) { transform: scale(1.08); }
+.spot-rating {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #f0a830;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.spot-fav {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #718096;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+.spot-fav:hover { transform: scale(1.1); }
+.spot-fav.active { color: #f0a830; background: #fff; }
+.spot-info { padding: 18px 20px 22px; }
+.spot-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1a365d;
+}
+.spot-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.spot-tag {
+  background: linear-gradient(135deg, rgba(31,158,143,0.08), rgba(79,209,197,0.08));
+  color: #2c5364;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+.spot-desc {
+  font-size: 13px;
+  color: #718096;
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
+/* ===== Food Cards ===== */
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.food-card {
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(20,60,60,0.08);
+  transition: transform 0.4s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.4s ease;
+  border: 1px solid rgba(20,60,60,0.04);
+}
+.food-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 48px rgba(20,60,60,0.14);
+}
+.food-cover { position: relative; overflow: hidden; }
+.food-cover :deep(.imgbox-img) { transition: transform 0.6s ease; }
+.food-card:hover .food-cover :deep(.imgbox-img) { transform: scale(1.08); }
+.food-type {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, #f5576c, #f093fb);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.food-rating {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #f0a830;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.food-info { padding: 18px 20px 22px; }
+.food-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1a365d;
+}
+.food-desc {
+  font-size: 13px;
+  color: #718096;
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.food-rec {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  color: #2c5364;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.food-rec .el-icon { flex-shrink: 0; margin-top: 2px; }
+.food-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(20,60,60,0.06);
+}
+.food-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0a830;
+}
+.food-fav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: #718096;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.food-fav:hover { color: #f0a830; }
+.food-fav.active { color: #f0a830; }
+
+/* ===== Guide Cards ===== */
+.guide-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.guide-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(20,60,60,0.08);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.4s ease;
+  display: flex;
+  border: 1px solid rgba(20,60,60,0.04);
+}
+.guide-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 48px rgba(20,60,60,0.14);
+}
+.guide-cover {
+  position: relative;
+  width: 220px;
+  flex-shrink: 0;
+}
+.guide-cover :deep(.imgbox-img) { transition: transform 0.6s ease; }
+.guide-card:hover .guide-cover :deep(.imgbox-img) { transform: scale(1.06); }
+.guide-days {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, #4fd1c5, #1f9e8f);
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.guide-info {
+  flex: 1;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+}
+.guide-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1a365d;
+}
+.guide-summary {
+  font-size: 13px;
+  color: #718096;
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 14px;
+  flex: 1;
+}
+.guide-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.guide-budget { color: #f0a830; }
+.guide-season { color: #2c5364; }
+
+/* ===== Weather Tab ===== */
+.weather-section { max-width: 900px; margin: 0 auto; }
+.weather-now-card {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 32px 40px;
+  color: #fff;
+  margin-bottom: 36px;
+  box-shadow: 0 16px 40px rgba(102,126,234,0.3);
+}
+.wn-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.wn-icon { font-size: 64px; }
+.wn-temp { font-size: 56px; font-weight: 800; }
+.wn-right h3 { font-size: 22px; margin-bottom: 6px; }
+.wn-right p { font-size: 14px; opacity: 0.9; }
+.weather-loading {
+  text-align: center;
+  padding: 40px;
+  color: #718096;
+}
+.weather-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a365d;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.weather-title::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(180deg, #4fd1c5, #1f9e8f);
+  border-radius: 2px;
+}
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  margin-bottom: 36px;
+}
+.forecast-day {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 8px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(20,60,60,0.06);
+  transition: transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.forecast-day:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(20,60,60,0.12);
+}
+.fd-date { font-size: 12px; color: #718096; font-weight: 500; }
+.fd-icon { font-size: 28px; }
+.fd-temp { font-size: 13px; font-weight: 700; color: #1a365d; }
+.fd-text { font-size: 11px; color: #718096; }
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 36px;
+}
+.month-cell {
+  text-align: center;
+  padding: 14px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+  transition: transform 0.3s;
+}
+.month-cell:hover { transform: scale(1.05); }
+.month-no { display: block; font-weight: 700; margin-bottom: 4px; }
+.month-tag { font-size: 11px; }
+.month-cell.best {
+  background: linear-gradient(135deg, #e8f7f1, #d1f0e3);
+  color: #1f9e8f;
+}
+.month-cell.good {
+  background: #fff8ec;
+  color: #b8861a;
+}
+.month-cell.normal {
+  background: #f7fafc;
+  color: #a0aec0;
+}
+
+.tips-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(20,60,60,0.06);
+  font-size: 14px;
+  color: #1a365d;
+  transition: background 0.3s;
+}
+.tip-item:hover { background: rgba(31,158,143,0.04); }
+.tip-item .el-icon { color: #1f9e8f; flex-shrink: 0; margin-top: 2px; }
+
+/* ===== Map Tab ===== */
+.map-section { max-width: 900px; }
+.map-desc {
+  color: #718096;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.map-box {
+  height: 480px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(20,60,60,0.12);
+  margin-bottom: 20px;
+}
+.spot-markers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.marker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(20,60,60,0.08);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+.marker-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20,60,60,0.14);
+  color: #2c5364;
+}
+.marker-item .el-icon { color: #2c5364; }
+.marker-rating {
+  color: #f0a830;
+  font-weight: 600;
+}
+
+/* ===== Container ===== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .spot-grid, .food-grid { grid-template-columns: repeat(2, 1fr); }
+  .guide-list { grid-template-columns: 1fr; }
+  .forecast-grid { grid-template-columns: repeat(4, 1fr); }
+  .month-grid { grid-template-columns: repeat(4, 1fr); }
+}
 @media (max-width: 768px) {
-  .hero-inner h1 { font-size: 30px; }
-  .slogan { font-size: 16px; }
-  .season-grid { grid-template-columns: 1fr; }
+  .hero-section { height: 380px; }
+  .hero-content { padding-top: 40px; }
+  .hero-title { font-size: 36px; letter-spacing: 2px; }
+  .hero-slogan { font-size: 17px; }
+  .hero-intro { font-size: 13px; }
+  .quick-bar {
+    grid-template-columns: repeat(2, 1fr);
+    margin: -20px 16px 0;
+  }
+  .quick-item { border-right: none; border-bottom: 1px solid rgba(20,60,60,0.06); }
+  .quick-item:nth-child(3), .quick-item:nth-child(4) { border-bottom: none; }
+  .spot-grid, .food-grid { grid-template-columns: 1fr; }
+  .forecast-grid { grid-template-columns: repeat(3, 1fr); }
   .month-grid { grid-template-columns: repeat(3, 1fr); }
   .tips-list { grid-template-columns: 1fr; }
+  .weather-now-card {
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    text-align: center;
+  }
+  .tab-btn { padding: 10px 16px; font-size: 13px; }
+  .hero-top { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .guide-card { flex-direction: column; }
+  .guide-cover { width: 100%; height: 180px; }
 }
 </style>
