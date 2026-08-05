@@ -362,7 +362,12 @@ const featuredCities = computed(() => {
 })
 
 const featuredGuides = computed(() => {
-  return guides.slice(0, 6).map(g => ({
+  const seen = new Set()
+  return guides.filter(g => {
+    if (seen.has(g.cityId)) return false
+    seen.add(g.cityId)
+    return true
+  }).slice(0, 6).map(g => ({
     ...g,
     cityName: getCity(g.cityId)?.name || ''
   }))

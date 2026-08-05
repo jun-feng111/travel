@@ -1,4 +1,4 @@
-import { cityCovers, foodCovers } from '../data/coverImages'
+import { cityCovers, spotCovers, foodCovers } from '../data/coverImages'
 
 const BASE = 'https://picsum.photos'
 const DEFAULT_W = 800
@@ -75,10 +75,7 @@ export function getSpotImage(spot, city) {
   if (spot.coverImage) return spot.coverImage
   if (localSpotImages[spot.id]) return localSpotImages[spot.id]
   if (spot.cover && spot.cover.startsWith('img/')) return spot.cover
-  if (cityCovers[city?.id]) {
-    const cityBase = cityCovers[city.id]
-    return cityBase.replace('w=800&h=500', 'w=800&h=500&seed=' + hashSeed(spot.id))
-  }
+  if (spotCovers[spot.id]) return spotCovers[spot.id]
   return getImageUrl(null, hashSeed(spot.id || spot.name))
 }
 
@@ -88,16 +85,17 @@ export function getFoodImage(food, city) {
   if (foodCovers[food.id]) return foodCovers[food.id]
   if (localFoodImages[food.id]) return localFoodImages[food.id]
   if (food.cover && food.cover.startsWith('img/')) return food.cover
-  if (cityCovers[city?.id]) {
-    const cityBase = cityCovers[city.id]
-    return cityBase.replace('w=800&h=500', 'w=800&h=500&seed=' + hashSeed(food.id))
-  }
+
   return getImageUrl(null, hashSeed(food.id || food.name))
 }
 
 export function getGuideImage(guide, city) {
   if (!guide) return ''
   if (guide.coverImage) return guide.coverImage
+  if (spotCovers[guide.cityId + '-gugong'] || spotCovers[guide.cityId + '-oldtown'] || spotCovers[guide.cityId + '-ancient']) {
+    const key = Object.keys(spotCovers).find(k => k.startsWith(guide.cityId + '-'))
+    if (key) return spotCovers[key]
+  }
   if (cityCovers[city?.id]) return cityCovers[city.id]
   return getImageUrl(null, hashSeed(guide.id || guide.title))
 }
