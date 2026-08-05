@@ -1,5 +1,6 @@
+import { cityCovers, foodCovers } from '../data/coverImages'
+
 const BASE = 'https://picsum.photos'
-const FLICKR = 'https://loremflickr.com'
 const DEFAULT_W = 800
 const DEFAULT_H = 500
 
@@ -64,11 +65,8 @@ const localFoodImages = {
 export function getCityImage(city, seed) {
   if (!city) return ''
   if (city.coverImage) return city.coverImage
+  if (cityCovers[city.id]) return cityCovers[city.id]
   if (localCityImages[city.id]) return localCityImages[city.id]
-  if (city.imageKeywords) {
-    const s = seed ?? hashSeed(city.id)
-    return `${FLICKR}/${DEFAULT_W}/${DEFAULT_H}/${encodeURIComponent(city.imageKeywords)}?lock=${s}`
-  }
   return getImageUrl(null, seed ?? hashSeed(city.id || city.name))
 }
 
@@ -77,9 +75,9 @@ export function getSpotImage(spot, city) {
   if (spot.coverImage) return spot.coverImage
   if (localSpotImages[spot.id]) return localSpotImages[spot.id]
   if (spot.cover && spot.cover.startsWith('img/')) return spot.cover
-  const keywords = spot.cover || (city?.imageKeywords) || ''
-  if (keywords) {
-    return `${FLICKR}/${DEFAULT_W}/${DEFAULT_H}/${encodeURIComponent(keywords)}?lock=${hashSeed(spot.id)}`
+  if (cityCovers[city?.id]) {
+    const cityBase = cityCovers[city.id]
+    return cityBase.replace('w=800&h=500', 'w=800&h=500&seed=' + hashSeed(spot.id))
   }
   return getImageUrl(null, hashSeed(spot.id || spot.name))
 }
@@ -87,11 +85,12 @@ export function getSpotImage(spot, city) {
 export function getFoodImage(food, city) {
   if (!food) return ''
   if (food.coverImage) return food.coverImage
+  if (foodCovers[food.id]) return foodCovers[food.id]
   if (localFoodImages[food.id]) return localFoodImages[food.id]
   if (food.cover && food.cover.startsWith('img/')) return food.cover
-  const keywords = food.cover || (city?.imageKeywords) || ''
-  if (keywords) {
-    return `${FLICKR}/${DEFAULT_W}/${DEFAULT_H}/${encodeURIComponent(keywords)}?lock=${hashSeed(food.id)}`
+  if (cityCovers[city?.id]) {
+    const cityBase = cityCovers[city.id]
+    return cityBase.replace('w=800&h=500', 'w=800&h=500&seed=' + hashSeed(food.id))
   }
   return getImageUrl(null, hashSeed(food.id || food.name))
 }
@@ -99,9 +98,7 @@ export function getFoodImage(food, city) {
 export function getGuideImage(guide, city) {
   if (!guide) return ''
   if (guide.coverImage) return guide.coverImage
-  if (city?.imageKeywords) {
-    return `${FLICKR}/${DEFAULT_W}/${DEFAULT_H}/${encodeURIComponent(city.imageKeywords)}?lock=${hashSeed(guide.id)}`
-  }
+  if (cityCovers[city?.id]) return cityCovers[city.id]
   return getImageUrl(null, hashSeed(guide.id || guide.title))
 }
 
