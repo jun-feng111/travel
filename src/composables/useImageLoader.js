@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { getCityImage, toKeywords, hashSeed, getImageUrl } from './useImageSource'
+import { getCityImage, hashSeed, getImageUrl } from './useImageSource'
 import { getStaticMapUrl } from '../api/amap'
 
 const IMAGE_CACHE = new Map()
@@ -62,21 +62,17 @@ function observeIntersection(el, callback) {
  * @returns {{
  *   primary: string,
  *   fallbacks: string[],
- *   source: 'loremflickr'
+ *   source: 'picsum'
  * }}
  */
 export function getCityCover(lng, lat, keywords = '', fallbackUrl = '') {
-  // 把传入的关键词转成 LoremFlickr 可用的逗号分隔形式
-  const kw = keywords
-    ? toKeywords(keywords)
-    : 'china,travel,landscape'
-  // 用 keywords 字符串本身做 seed，保证同关键词返回同图
+  // Picsum 不使用关键词，只用 seed 保证一致性
   const seed = hashSeed(keywords || `${lng},${lat}`)
-  const primary = getImageUrl(kw, seed)
+  const primary = getImageUrl(null, seed)
   return {
     primary,
     fallbacks: [],
-    source: 'loremflickr'
+    source: 'picsum'
   }
 }
 

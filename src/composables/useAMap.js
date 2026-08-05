@@ -6,15 +6,22 @@ export function useAMap(mapRef, options = {}) {
   const loaded = ref(false)
   let mapInstance = null
 
-  async function initMap() {
+  async function initMap(forceCenter) {
     if (!mapRef.value) return
-    if (mapInstance) return mapInstance
 
     try {
       const AMap = await loadAMap()
+      if (mapInstance) {
+        if (forceCenter) {
+          mapInstance.setCenter(forceCenter)
+        }
+        return mapInstance
+      }
+
+      const center = forceCenter || options.center || [116.397428, 39.90923]
       mapInstance = new AMap.Map(mapRef.value, {
         zoom: options.zoom || 12,
-        center: options.center || [116.397428, 39.90923],
+        center: center,
         viewMode: '2D',
         mapStyle: 'amap://styles/whitesmoke'
       })

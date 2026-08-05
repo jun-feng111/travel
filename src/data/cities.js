@@ -4,6 +4,7 @@ export const cities = [
     id: 'beijing', name: '北京', pinyin: 'beijing', province: '北京', region: '华北',
     slogan: '千年帝都，大气庄重',
     cover: 'beijing-forbidden-city',
+
     imageKeywords: 'beijing,forbidden-city,great-wall',
     intro: '北京，中国首都，紫禁城的红墙黄瓦、长城的蜿蜒雄姿、胡同四合院的京味儿，历史厚重与现代都市交相辉映。',
     bestSeason: '4-5月、9-10月',

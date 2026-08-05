@@ -282,6 +282,7 @@ import { foodsByCity } from '../data/foods'
 import { useFavorites } from '../composables/useFavorites'
 import { useWeather } from '../composables/useWeather'
 import { getCityImage, getSpotImage, getFoodImage, getGuideImage } from '../composables/useImageSource'
+import { loadAMap } from '../api/amap'
 
 const route = useRoute()
 const router = useRouter()
@@ -437,53 +438,60 @@ const seasonTips = computed(() => {
 
 let map = null
 let mapInited = false
+let amapInstance = null
+let amapMarkers = []
+
 async function initMap() {
   if (!city.value || mapInited) return
   mapInited = true
-  if (!window.L) {
-    const css = document.createElement('link')
-    css.rel = 'stylesheet'
-    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-    document.head.appendChild(css)
-    await new Promise((res, rej) => {
-      const s = document.createElement('script')
-      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-      s.onload = res
-      s.onerror = rej
-      document.head.appendChild(s)
+  try {
+    const AMap = await loadAMap()
+    await nextTick()
+    const el = document.getElementById('cityMap')
+    if (!el) return
+    amapInstance = new AMap.Map('cityMap', {
+      zoom: 12,
+      center: [city.value.lng, city.value.lat],
+      viewMode: '2D',
+      mapStyle: 'amap://styles/whitesmoke'
     })
+    amapInstance.addControl(new AMap.ToolBar({ position: 'RB' }))
+    amapInstance.addControl(new AMap.Scale())
+    const spotsList = spotsByCity(city.value.id)
+    amapMarkers = spotsList.map(s => {
+      const marker = new AMap.Marker({
+        position: [s.lng, s.lat],
+        title: s.name,
+        offset: new AMap.Pixel(-13, -30)
+      })
+      const infoWindow = new AMap.InfoWindow({
+        content: `<div style="padding:12px;min-width:200px">
+          <h4 style="margin:0 0 6px;font-size:15px;font-weight:700;color:#1f2d3a">${s.name}</h4>
+          <div style="color:#f0a830;font-size:13px;font-weight:600;margin-bottom:6px">★ ${s.rating}</div>
+          <p style="font-size:12px;color:#6b7c8f;margin:0 0 8px;line-height:1.5">${s.intro}</p>
+          <a href="#/spot/${s.id}" style="color:#1f9e8f;font-size:13px;font-weight:600">查看详情 →</a>
+        </div>`,
+        offset: new AMap.Pixel(0, -30)
+      })
+      marker.on('click', () => {
+        infoWindow.open(amapInstance, [s.lng, s.lat])
+      })
+      amapInstance.add(marker)
+      return { marker, spot: s, infoWindow }
+    })
+  } catch (e) {
+    console.warn('高德地图加载失败:', e)
   }
-  await nextTick()
-  const el = document.getElementById('cityMap')
-  if (!el || !window.L) return
-  const spotsList = spotsByCity(city.value.id)
-  const center = [city.value.lat, city.value.lng]
-  map = window.L.map('cityMap').setView(center, 12)
-  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
-  }).addTo(map)
-  spotsList.forEach(s => {
-    const marker = window.L.marker([s.lat, s.lng]).addTo(map)
-    const html = `
-      <div style="width:200px">
-        <div style="height:80px;background:linear-gradient(135deg,#4fd1c5,#1f9e8f);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600">${s.name}</div>
-        <h4 style="margin:6px 0 2px">${s.name}</h4>
-        <div style="color:#f0a830;font-size:13px">★ ${s.rating}</div>
-        <p style="font-size:12px;color:#666;margin:4px 0">${s.intro}</p>
-        <a href="#/spot/${s.id}" style="color:#1f9e8f;font-size:13px;font-weight:600">查看详情 →</a>
-      </div>`
-    marker.bindPopup(html)
-  })
-  setTimeout(() => map && map.invalidateSize(), 200)
 }
 
 function focusMarker(s) {
-  if (!map) return
-  map.setView([s.lat, s.lng], 15)
-  const marker = map._layers
-    ? Object.values(map._layers).find(m => m.getLatLng && Math.abs(m.getLatLng().lat - s.lat) < 0.001)
-    : null
-  if (marker) marker.openPopup()
+  if (!amapInstance) return
+  amapInstance.setCenter([s.lng, s.lat])
+  amapInstance.setZoom(15)
+  const found = amapMarkers.find(m => m.spot.id === s.id)
+  if (found) {
+    found.infoWindow.open(amapInstance, [s.lng, s.lat])
+  }
 }
 
 watch(tab, (v) => {

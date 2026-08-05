@@ -87,7 +87,7 @@
             位置导航
           </h2>
           <div class="map-card">
-            <div id="spotMiniMap" class="map-placeholder"></div>
+            <div ref="spotMapRef" class="map-container"></div>
             <div class="map-info">
               <div class="map-coords">
                 <span>经度: {{ spot.lng }}</span>
@@ -169,7 +169,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, nextTick } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import {
   ArrowLeft,
@@ -186,6 +186,7 @@ import ImgBox from '../components/ImgBox.vue'
 import { getSpotImage, getCityImage } from '../composables/useImageSource'
 import { useFavorites } from '../composables/useFavorites'
 import { spotHelpers, cityHelpers } from '../data/index'
+import { useAMap } from '../composables/useAMap'
 
 const route = useRoute()
 const { isFavorite, toggleFavorite } = useFavorites()
@@ -236,36 +237,48 @@ function toggleFav() {
   })
 }
 
-async function initMiniMap() {
+const spotMapRef = ref(null)
+const { initMap, addMarker, setCenter, setZoom, destroy } = useAMap(spotMapRef, {
+  zoom: 15,
+  center: [116.397428, 39.90923],
+  showToolBar: false,
+  showScale: true
+})
+
+let spotMarker = null
+
+async function initSpotMap() {
   if (!spot.value) return
-  if (!window.L) {
-    const css = document.createElement('link')
-    css.rel = 'stylesheet'
-    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-    document.head.appendChild(css)
-    await new Promise((res, rej) => {
-      const s = document.createElement('script')
-      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-      s.onload = res
-      s.onerror = rej
-      document.head.appendChild(s)
-    })
-  }
   await nextTick()
-  const el = document.getElementById('spotMiniMap')
-  if (!el || !window.L) return
-  const { lng, lat } = spot.value
-  const map = window.L.map('spotMiniMap').setView([lat, lng], 14)
-  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
-  }).addTo(map)
-  const marker = window.L.marker([lat, lng]).addTo(map)
-  marker.bindPopup(`<strong>${spot.value.name}</strong><br>★ ${spot.value.rating}`)
-  setTimeout(() => map.invalidateSize(), 200)
+  try {
+    const center = [spot.value.lng, spot.value.lat]
+    const mapInstance = await initMap(center)
+    if (mapInstance && spot.value) {
+      if (spotMarker) {
+        mapInstance.remove(spotMarker)
+      }
+      setCenter(spot.value.lng, spot.value.lat)
+      setZoom(15)
+      spotMarker = addMarker(
+        { lng: spot.value.lng, lat: spot.value.lat },
+        spot.value.name
+      )
+    }
+  } catch (e) {
+    console.warn('高德地图加载失败')
+  }
 }
 
+watch(() => route.params.spotId, () => {
+  nextTick(() => initSpotMap())
+})
+
 onMounted(() => {
-  initMiniMap()
+  initSpotMap()
+})
+
+onUnmounted(() => {
+  destroy()
 })
 </script>
 
@@ -288,7 +301,11 @@ onMounted(() => {
   margin-bottom: 30px;
 }
 
-.hero-img { height: 380px; }
+.hero-img { height: 420px; }
+.hero-img :deep(.imgbox-img) {
+  filter: brightness(0.48) saturate(1.15);
+  transform: scale(1.05);
+}
 
 .hero-content {
   position: absolute;
@@ -454,28 +471,10 @@ onMounted(() => {
   box-shadow: 0 4px 16px rgba(20, 60, 60, 0.08);
 }
 
-.map-placeholder {
+.map-container {
   width: 100%;
-  height: 260px;
-  background-size: cover;
-  background-position: center;
-  position: relative;
+  height: 320px;
   background-color: #e8f0ef;
-}
-
-.map-marker {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 36px;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-  animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50% { transform: translate(-50%, -60%); }
 }
 
 .map-info {

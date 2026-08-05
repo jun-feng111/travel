@@ -1,34 +1,8 @@
-/**
- * 真实风景图源 - 基于 LoremFlickr
- * https://loremflickr.com/{w}/{h}/{keywords}?lock={seed}
- *
- * - 关键词逗号分隔：默认 OR 关系（任一匹配即返回），匹配范围更广
- * - lock 参数锁定 seed，相同 seed + keywords 永远返回同一张图，保证一致性
- * - 免费无 API Key，适合作为城市/景点/美食封面图源
- *
- * 注：与地图功能完全解耦，地图仍由 CityMap.vue (Leaflet) 独立提供。
- */
+const BASE = 'https://picsum.photos'
+const FLICKR = 'https://loremflickr.com'
+const DEFAULT_W = 800
+const DEFAULT_H = 500
 
-const BASE = 'https://loremflickr.com'
-
-// 默认兜底关键词
-const DEFAULT_KEYWORDS = 'china,travel,landscape'
-
-/**
- * 把短横线/下划线分隔的字符串转换为逗号分隔的关键词
- * 'beijing-forbidden-city' -> 'beijing,forbidden,city'
- */
-function toKeywords(str) {
-  if (!str) return DEFAULT_KEYWORDS
-  return String(str)
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .join(',')
-}
-
-/**
- * 字符串 hash → 正整数，用作 lock seed
- */
 function hashSeed(str) {
   if (!str) return 1
   let h = 0
@@ -39,82 +13,96 @@ function hashSeed(str) {
   return Math.abs(h) % 9999 + 1
 }
 
-/**
- * 生成 LoremFlickr 图片 URL
- * @param {string} keywords - 逗号分隔的英文关键词
- * @param {number} [seed=1] - 锁定种子
- * @param {number} [w=800]
- * @param {number} [h=500]
- * @returns {string} 图片 URL
- */
-export function getImageUrl(keywords, seed = 1, w = 800, h = 500) {
-  const kw = keywords && keywords.trim() ? keywords : DEFAULT_KEYWORDS
-  return `${BASE}/${w}/${h}/${encodeURIComponent(kw)}?lock=${seed}`
+export function getImageUrl(keywords, seed = 1, w = DEFAULT_W, h = DEFAULT_H) {
+  return `${BASE}/seed/${seed}/${w}/${h}`
 }
 
-/**
- * 城市封面图（真实风景）
- * 优先使用 city.imageKeywords（精挑的英文关键词），否则从 cover 字段派生
- *
- * @param {Object} city - 城市对象（cities.js 中的项）
- * @param {number} [seed] - 可选种子，默认按 id hash
- * @returns {string}
- */
+const localCityImages = {
+  chengdu: 'img/chengdu-cover.png',
+  hangzhou: 'img/hangzhou-cover.png',
+  xian: 'img/xian-cover.png',
+  lijiang: 'img/lijiang-cover.png',
+  xiamen: 'img/xiamen-cover.png'
+}
+
+const localSpotImages = {
+  'chengdu-panda': 'img/chengdu-panda.png',
+  'chengdu-kuanzhai': 'img/chengdu-kuanzhai.png',
+  'chengdu-dujiangyan': 'img/chengdu-dujiangyan.png',
+  'hangzhou-xihu': 'img/hangzhou-xihu.png',
+  'hangzhou-lingyin': 'img/hangzhou-lingyin.png',
+  'hangzhou-xixi': 'img/hangzhou-xixi.png',
+  'xian-bingmayong': 'img/xian-bingmayong.png',
+  'xian-chengqiang': 'img/xian-chengqiang.png',
+  'xian-huiminjie': 'img/xian-huiminjie.png',
+  'lijiang-oldtown': 'img/lijiang-oldtown.png',
+  'lijiang-yulong': 'img/lijiang-yulong.png',
+  'lijiang-shuhe': 'img/lijiang-shuhe.png',
+  'xiamen-gulangyu': 'img/xiamen-gulangyu.png',
+  'xiamen-huandao': 'img/xiamen-huandao.png',
+  'xiamen-zengcuoan': 'img/xiamen-zengcuoan.png'
+}
+
+const localFoodImages = {
+  'chengdu-hotpot': 'img/chengdu-hotpot.png',
+  'chengdu-chuanchuan': 'img/chengdu-chuanchuan.png',
+  'chengdu-longchaoshou': 'img/chengdu-longchaoshou.png',
+  'hangzhou-xihucuyu': 'img/hangzhou-xihucuyu.png',
+  'hangzhou-longjingxiaoren': 'img/hangzhou-longjingxiaoren.png',
+  'hangzhou-dongpo': 'img/hangzhou-dongpo.png',
+  'xian-roujiamo': 'img/xian-roujiamo.png',
+  'xian-paomo': 'img/xian-paomo.png',
+  'xian-liangpi': 'img/xian-liangpi.png',
+  'lijiang-guozhuang': 'img/lijiang-guozhuang.png',
+  'lijiang-baba': 'img/lijiang-baba.png',
+  'lijiang-shanguo': 'img/lijiang-shanguo.png',
+  'xiamen-shachamian': 'img/xiamen-shachamian.png',
+  'xiamen-haishen': 'img/xiamen-haishen.png',
+  'xiamen-zongzi': 'img/xiamen-zongzi.png'
+}
+
 export function getCityImage(city, seed) {
   if (!city) return ''
-  const keywords = city.imageKeywords
-    ? city.imageKeywords
-    : toKeywords(city.cover || city.id)
-  return getImageUrl(keywords, seed ?? hashSeed(city.id || city.name))
+  if (city.coverImage) return city.coverImage
+  if (localCityImages[city.id]) return localCityImages[city.id]
+  if (city.imageKeywords) {
+    const s = seed ?? hashSeed(city.id)
+    return `${FLICKR}/${DEFAULT_W}/${DEFAULT_H}/${encodeURIComponent(city.imageKeywords)}?lock=${s}`
+  }
+  return getImageUrl(null, seed ?? hashSeed(city.id || city.name))
 }
 
-/**
- * 景点图片
- * @param {Object} spot - 景点对象
- * @param {Object} [city] - 所属城市（可选，用于追加城市关键词提升相关性）
- * @returns {string}
- */
 export function getSpotImage(spot, city) {
   if (!spot) return ''
-  const spotKw = toKeywords(spot.cover || spot.id)
-  const cityKw = city
-    ? (city.imageKeywords || toKeywords(city.cover || city.id || ''))
-    : ''
-  // 组合关键词（OR 关系），让 LoremFlickr 有更多匹配空间
-  const keywords = cityKw ? `${spotKw},${cityKw}` : spotKw
-  return getImageUrl(keywords, hashSeed(spot.id || spot.name))
+  if (spot.coverImage) return spot.coverImage
+  if (localSpotImages[spot.id]) return localSpotImages[spot.id]
+  if (spot.cover && spot.cover.startsWith('img/')) return spot.cover
+  const keywords = spot.cover || (city?.imageKeywords) || ''
+  if (keywords) {
+    return `${FLICKR}/${DEFAULT_W}/${DEFAULT_H}/${encodeURIComponent(keywords)}?lock=${hashSeed(spot.id)}`
+  }
+  return getImageUrl(null, hashSeed(spot.id || spot.name))
 }
 
-/**
- * 美食图片
- * @param {Object} food - 美食对象
- * @param {Object} [city] - 所属城市（可选）
- * @returns {string}
- */
 export function getFoodImage(food, city) {
   if (!food) return ''
-  const foodKw = toKeywords(food.cover || food.id) + ',food'
-  const cityKw = city
-    ? (city.imageKeywords || toKeywords(city.cover || city.id || ''))
-    : ''
-  const keywords = cityKw ? `${foodKw},${cityKw}` : foodKw
-  return getImageUrl(keywords, hashSeed(food.id || food.name))
+  if (food.coverImage) return food.coverImage
+  if (localFoodImages[food.id]) return localFoodImages[food.id]
+  if (food.cover && food.cover.startsWith('img/')) return food.cover
+  const keywords = food.cover || (city?.imageKeywords) || ''
+  if (keywords) {
+    return `${FLICKR}/${DEFAULT_W}/${DEFAULT_H}/${encodeURIComponent(keywords)}?lock=${hashSeed(food.id)}`
+  }
+  return getImageUrl(null, hashSeed(food.id || food.name))
 }
 
-/**
- * 攻略图片
- * @param {Object} guide - 攻略对象
- * @param {Object} [city] - 所属城市（可选）
- * @returns {string}
- */
 export function getGuideImage(guide, city) {
   if (!guide) return ''
-  const guideKw = toKeywords(guide.cover || guide.id)
-  const cityKw = city
-    ? (city.imageKeywords || toKeywords(city.cover || city.id || ''))
-    : ''
-  const keywords = cityKw ? `${guideKw},${cityKw}` : guideKw
-  return getImageUrl(keywords, hashSeed(guide.id || guide.title))
+  if (guide.coverImage) return guide.coverImage
+  if (city?.imageKeywords) {
+    return `${FLICKR}/${DEFAULT_W}/${DEFAULT_H}/${encodeURIComponent(city.imageKeywords)}?lock=${hashSeed(guide.id)}`
+  }
+  return getImageUrl(null, hashSeed(guide.id || guide.title))
 }
 
-export { hashSeed, toKeywords }
+export { hashSeed }
