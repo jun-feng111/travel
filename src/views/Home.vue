@@ -544,13 +544,12 @@ onUnmounted(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.45;
 }
 
 .hero-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(15, 32, 39, 0.75) 0%, rgba(32, 58, 67, 0.65) 30%, rgba(44, 83, 100, 0.6) 60%, rgba(26, 54, 93, 0.75) 100%);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, transparent 25%, transparent 60%, rgba(0, 0, 0, 0.45) 100%);
 }
 
 .hero-shape {
@@ -645,7 +644,7 @@ onUnmounted(() => {
   margin: 0 0 20px;
   letter-spacing: 3px;
   line-height: 1.1;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 .title-line {
