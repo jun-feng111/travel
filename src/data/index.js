@@ -13,6 +13,10 @@ export const cityHelpers = {
     return cities.find(c => c.id === id) || null
   },
 
+  findAll() {
+    return cities
+  },
+
   findByName(name) {
     return cities.find(c => c.name === name) || null
   },
