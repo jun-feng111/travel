@@ -3,6 +3,7 @@
     <!-- ===== Hero Section ===== -->
     <section class="hero-section">
       <div class="hero-bg">
+        <div class="hero-image"></div>
         <div class="hero-gradient"></div>
         <div class="hero-shape shape-1"></div>
         <div class="hero-shape shape-2"></div>
@@ -536,10 +537,20 @@ onUnmounted(() => {
   z-index: 0;
 }
 
+.hero-image {
+  position: absolute;
+  inset: 0;
+  background-image: url('/wanxia.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.45;
+}
+
 .hero-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #0f2027 0%, #203a43 30%, #2c5364 60%, #1a365d 100%);
+  background: linear-gradient(135deg, rgba(15, 32, 39, 0.75) 0%, rgba(32, 58, 67, 0.65) 30%, rgba(44, 83, 100, 0.6) 60%, rgba(26, 54, 93, 0.75) 100%);
 }
 
 .hero-shape {
