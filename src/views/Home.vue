@@ -23,25 +23,25 @@
 
         <div class="hero-search">
           <div class="search-box">
-            <el-input
-              v-model="searchKw"
-              size="large"
-              placeholder="试试搜索：北京、成都火锅、西湖、故宫..."
-              clearable
-              class="search-input"
-              @keyup.enter="goExplore"
-              @input="onSearchInput"
-            >
-              <template #prefix>
-                <el-icon class="search-icon"><Search /></el-icon>
-              </template>
-              <template #append>
-                <button class="search-btn" @click="goExplore">
-                  <el-icon><Search /></el-icon>
-                  <span>搜索</span>
-                </button>
-              </template>
-            </el-input>
+            <div class="search-row">
+              <el-input
+                v-model="searchKw"
+                size="large"
+                placeholder="试试搜索：北京、成都火锅、西湖、故宫..."
+                clearable
+                class="search-input"
+                @keyup.enter="goExplore"
+                @input="onSearchInput"
+              >
+                <template #prefix>
+                  <el-icon class="search-icon"><Search /></el-icon>
+                </template>
+              </el-input>
+              <button class="search-btn" @click="goExplore">
+                <el-icon class="search-btn-icon"><Search /></el-icon>
+                <span>搜索</span>
+              </button>
+            </div>
 
             <transition name="fade">
               <div v-if="showSuggestions && searchSuggestions.length" class="suggestions-panel">
@@ -109,6 +109,31 @@
       <div class="hero-scroll">
         <span>向下滚动</span>
         <div class="scroll-line"></div>
+      </div>
+    </section>
+
+    <!-- ===== 服务亮点 ===== -->
+    <section class="features-section">
+      <div class="features-bg">
+        <div class="features-glow glow-1"></div>
+        <div class="features-glow glow-2"></div>
+      </div>
+      <div class="features-inner">
+        <div class="features-head">
+          <span class="features-eyebrow">为什么选择旅行志</span>
+          <h2 class="features-title">一站式旅行灵感与规划服务</h2>
+          <p class="features-desc">从发现目的地到规划行程，我们为你提供完整且贴心的旅行体验</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card" v-for="(f, i) in features" :key="i">
+            <div class="feature-icon" :style="{ background: f.gradient }">
+              <el-icon><component :is="f.icon" /></el-icon>
+            </div>
+            <h3 class="feature-name">{{ f.name }}</h3>
+            <p class="feature-text">{{ f.text }}</p>
+            <div class="feature-shine"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -327,7 +352,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, Compass, Calendar } from '@element-plus/icons-vue'
+import { Search, Compass, Calendar, MapLocation, Sunny, Reading, Promotion } from '@element-plus/icons-vue'
 import ImgBox from '../components/ImgBox.vue'
 import { cities, getCity, regions } from '../data/cities'
 import { guides } from '../data/guides'
@@ -343,6 +368,33 @@ const activeRegion = ref('')
 let searchTimer = null
 
 const hotTags = ['北京', '成都', '火锅', '西湖', '故宫', '三亚', '丽江', '西安']
+
+const features = [
+  {
+    icon: MapLocation,
+    name: '海量精选数据',
+    text: '覆盖全国 70+ 城市的景点、美食与攻略，精挑细选每一处目的地',
+    gradient: 'linear-gradient(135deg, #4fd1c5, #1f9e8f)'
+  },
+  {
+    icon: Compass,
+    name: '智能行程规划',
+    text: '一键生成个性化旅行路线，自动安排日程，省时又省心',
+    gradient: 'linear-gradient(135deg, #667eea, #764ba2)'
+  },
+  {
+    icon: Sunny,
+    name: '实时天气与地图',
+    text: '接入高德地图与和风天气数据，出行信息实时掌握无忧',
+    gradient: 'linear-gradient(135deg, #f0a830, #fbd38d)'
+  },
+  {
+    icon: Reading,
+    name: '深度真实攻略',
+    text: '真实旅行体验分享，发现小众之美，让每次出行都独一无二',
+    gradient: 'linear-gradient(135deg, #f093fb, #f5576c)'
+  }
+]
 
 const totalCities = computed(() => cities.length)
 
@@ -681,12 +733,22 @@ onUnmounted(() => {
   position: relative;
 }
 
+.search-row {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.search-input {
+  flex: 1;
+}
+
 .search-input :deep(.el-input__wrapper) {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 999px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.2);
-  padding: 6px 6px 6px 22px;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  padding: 8px 22px;
+  transition: box-shadow 0.3s ease;
 }
 
 .search-input :deep(.el-input__wrapper:hover) {
@@ -714,28 +776,35 @@ onUnmounted(() => {
 .search-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
   background: linear-gradient(135deg, var(--primary-light), var(--primary));
   color: white;
   border: none;
-  padding: 0 26px;
-  height: 100%;
+  padding: 0 32px;
   font-weight: 600;
   font-size: 15px;
   cursor: pointer;
-  border-radius: 0 999px 999px 0;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 14px rgba(31, 158, 143, 0.35);
-  letter-spacing: 0.5px;
+  border-radius: 999px;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(31, 158, 143, 0.4);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .search-btn:hover {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  box-shadow: 0 6px 18px rgba(31, 158, 143, 0.5);
+  box-shadow: 0 12px 32px rgba(31, 158, 143, 0.55);
+  transform: translateY(-2px);
 }
 
-.search-btn .el-icon {
-  font-size: 17px;
+.search-btn:active {
+  transform: translateY(0);
+}
+
+.search-btn-icon {
+  font-size: 18px;
 }
 
 .suggestions-panel {
@@ -936,6 +1005,159 @@ onUnmounted(() => {
 @keyframes scrollPulse {
   0%, 100% { opacity: 0.5; height: 40px; }
   50% { opacity: 1; height: 50px; }
+}
+
+/* ===== 服务亮点 ===== */
+.features-section {
+  position: relative;
+  padding: 80px 24px 72px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7f6 100%);
+}
+
+.features-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.features-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.18;
+}
+
+.glow-1 {
+  width: 420px;
+  height: 420px;
+  background: linear-gradient(135deg, #4fd1c5, #1f9e8f);
+  top: -120px;
+  left: -80px;
+  animation: float 10s ease-in-out infinite;
+}
+
+.glow-2 {
+  width: 380px;
+  height: 380px;
+  background: linear-gradient(135deg, #f0a830, #fbd38d);
+  bottom: -100px;
+  right: -60px;
+  animation: float 12s ease-in-out infinite reverse;
+}
+
+.features-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.features-head {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.features-eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--primary);
+  background: rgba(31, 158, 143, 0.1);
+  padding: 6px 18px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.features-title {
+  font-size: 34px;
+  font-weight: 800;
+  color: #1a365d;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.features-desc {
+  font-size: 16px;
+  color: #6b7c8f;
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.feature-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px 24px 28px;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(20, 60, 60, 0.06);
+  border: 1px solid rgba(20, 60, 60, 0.04);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow: hidden;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 24px 56px rgba(20, 60, 60, 0.14);
+  border-color: rgba(31, 158, 143, 0.2);
+}
+
+.feature-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: white;
+  font-size: 30px;
+  box-shadow: 0 8px 20px rgba(20, 60, 60, 0.15);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.12) rotate(-6deg);
+}
+
+.feature-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a365d;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.feature-text {
+  font-size: 13.5px;
+  color: #6b7c8f;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.feature-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transition: left 0.7s ease;
+  pointer-events: none;
+}
+
+.feature-card:hover .feature-shine {
+  left: 120%;
 }
 
 /* ===== Container ===== */
@@ -1534,6 +1756,9 @@ onUnmounted(() => {
   .guide-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -1571,6 +1796,15 @@ onUnmounted(() => {
   .food-grid,
   .guide-grid {
     grid-template-columns: 1fr;
+  }
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+  .features-title {
+    font-size: 26px;
+  }
+  .features-section {
+    padding: 56px 20px 48px;
   }
   .section {
     padding: 48px 0;
