@@ -682,39 +682,60 @@ onUnmounted(() => {
 }
 
 .search-input :deep(.el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-  padding: 4px 4px 4px 20px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 999px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  padding: 6px 6px 6px 22px;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(79, 209, 197, 0.4);
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.32), 0 0 0 2px rgba(31, 158, 143, 0.45);
+}
+
+.search-input :deep(.el-input__inner) {
+  font-size: 15px;
+  color: #1f2d3a;
+}
+
+.search-input :deep(.el-input__inner::placeholder) {
+  color: #9aa8b5;
 }
 
 .search-icon {
-  font-size: 18px;
-  color: #2c5364;
+  font-size: 20px;
+  color: var(--primary);
 }
 
 .search-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #d69e2e, #b7791f);
+  background: linear-gradient(135deg, var(--primary-light), var(--primary));
   color: white;
   border: none;
-  padding: 0 20px;
+  padding: 0 26px;
   height: 100%;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
-  border-radius: 0 16px 16px 0;
+  border-radius: 0 999px 999px 0;
   transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(31, 158, 143, 0.35);
+  letter-spacing: 0.5px;
 }
 
 .search-btn:hover {
-  background: linear-gradient(135deg, #b7791f, #975a16);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 6px 18px rgba(31, 158, 143, 0.5);
 }
 
 .search-btn .el-icon {
-  font-size: 16px;
+  font-size: 17px;
 }
 
 .suggestions-panel {
