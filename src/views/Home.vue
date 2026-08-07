@@ -540,7 +540,7 @@ onUnmounted(() => {
 .hero-image {
   position: absolute;
   inset: 0;
-  background-image: url('/wanxia.png');
+  background-image: url('https://images.pexels.com/photos/19031655/pexels-photo-19031655.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

@@ -196,6 +196,7 @@ export const spotCovers = {
   'lijiang-shuhe': 'https://images.pexels.com/photos/38690155/pexels-photo-38690155.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop',
   'shangrila-songzhan': 'https://images.pexels.com/photos/36888061/pexels-photo-36888061.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop',
   'jiuzhai-nuorilang': 'https://images.pexels.com/photos/31404919/pexels-photo-31404919.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop',
+  'jiuzhai-canghai': 'https://images.pexels.com/photos/37302358/pexels-photo-37302358.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop',
   'lasa-potala': 'https://images.pexels.com/photos/38462384/pexels-photo-38462384.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop',
   'lasa-dazhao': 'https://images.pexels.com/photos/30136198/pexels-photo-30136198.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop',
   'lasa-namucuo': 'https://images.pexels.com/photos/38567916/pexels-photo-38567916.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop',
